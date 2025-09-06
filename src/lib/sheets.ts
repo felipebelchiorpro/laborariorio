@@ -56,25 +56,24 @@ function mapRowToExam(row: any[], index: number): Exam | null {
   let receivedDate: string | undefined;
   if (receivedDateStr) {
     const dateString = String(receivedDateStr).trim();
-    const currentYear = getYear(new Date());
-    
-    // Tenta analisar com formatos DD/MM e DD/MM/YYYY
-    let parsedDate = parse(`${dateString}/${currentYear}`, 'dd/MM/yyyy', new Date());
-    if (!isValid(parsedDate)) {
-      parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
-    }
+    if (dateString) {
+        const currentYear = getYear(new Date());
+        
+        let parsedDate = parse(`${dateString}/${currentYear}`, 'dd/MM/yyyy', new Date());
+        if (!isValid(parsedDate)) {
+          parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+        }
 
-    if (isValid(parsedDate)) {
-      receivedDate = parsedDate.toISOString();
-    } else {
-      console.warn(`[WARN] Data em formato inválido na linha ${rowNumber}: "${receivedDateStr}". A data será ignorada.`);
+        if (isValid(parsedDate)) {
+          receivedDate = parsedDate.toISOString();
+        }
     }
   }
 
   const examResult: Exam = {
     id: `ROW${rowNumber}`,
     rowNumber,
-    patientName: String(patientName),
+    patientName: String(patientName || '').trim(),
     receivedDate,
     withdrawnBy: withdrawnBy || undefined,
     observations: observations || '',
@@ -94,9 +93,7 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
 }
 
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
-  console.log(`[INFO] Iniciando busca de exames para a planilha: ${spreadsheetId}`);
   if (!spreadsheetId) {
-    console.warn("[WARN] O ID da planilha está ausente.");
     return [];
   }
   try {
@@ -109,16 +106,14 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     const rows = response.data.values;
     
     if (!rows || rows.length <= 1) { 
-      console.log("[INFO] A planilha está vazia ou contém apenas o cabeçalho.");
       return [];
     }
     
     const exams = rows
       .slice(1)
       .map((row, index) => mapRowToExam(row, index))
-      .filter((exam): exam is Exam => exam !== null && exam.patientName.trim() !== '');
+      .filter((exam): exam is Exam => exam !== null);
 
-    console.log(`[INFO] Processamento concluído. ${exams.length} exames mapeados.`);
     return exams;
 
   } catch (error) {
