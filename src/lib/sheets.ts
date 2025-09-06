@@ -22,6 +22,7 @@ function getAuth() {
     throw new Error(errorMsg);
   }
 
+  // Corrigir a formatação da chave privada para o ambiente de produção
   const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
