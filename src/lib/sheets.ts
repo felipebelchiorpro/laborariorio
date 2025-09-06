@@ -7,7 +7,7 @@ import { parse, isValid, getYear } from 'date-fns';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D';
 
-function getAuth() {
+async function getAuth() {
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
   const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
@@ -21,26 +21,29 @@ function getAuth() {
     console.error(`[AUTH ERROR] ${errorMsg}`);
     throw new Error(errorMsg);
   }
-  
-  // Esta é a correção crucial para o erro "DECODER routines::unsupported"
-  const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
-    const auth = new google.auth.JWT(
-        clientEmail,
-        undefined,
-        processedPrivateKey,
-        SCOPES
-    );
-    return auth;
+    const credentials = {
+      client_email: clientEmail,
+      private_key: privateKey.replace(/\\n/g, '\n'),
+    };
+    
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: SCOPES,
+    });
+    
+    const client = await auth.getClient();
+    return client;
+
   } catch (error: any) {
     console.error("[AUTH ERROR] Falha ao criar o cliente de autenticação:", error.message);
     throw new Error("As credenciais fornecidas não são válidas.");
   }
 }
 
-function getSheetsClient() {
-  const auth = getAuth();
+async function getSheetsClient() {
+  const auth = await getAuth();
   return google.sheets({ version: 'v4', auth });
 }
 
@@ -108,7 +111,7 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   }
   console.log(`[INFO] Iniciando busca de exames para a planilha: ${spreadsheetId}`);
   try {
-    const sheets = getSheetsClient();
+    const sheets = await getSheetsClient();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: RANGE,
@@ -140,7 +143,7 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 }
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
-    const sheets = getSheetsClient();
+    const sheets = await getSheetsClient();
     const values = [mapExamToRow(exam)];
 
     await sheets.spreadsheets.values.append({
@@ -157,7 +160,7 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
     if (!exam.rowNumber) {
         throw new Error("O número da linha é necessário para atualizar o exame.");
     }
-    const sheets = getSheetsClient();
+    const sheets = await getSheetsClient();
     const range = `A${exam.rowNumber}:D${exam.rowNumber}`;
     const values = [mapExamToRow(exam)];
 
