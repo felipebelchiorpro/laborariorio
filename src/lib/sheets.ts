@@ -26,13 +26,12 @@ function getAuth() {
   const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: clientEmail,
-        private_key: processedPrivateKey,
-      },
-      scopes: SCOPES,
-    });
+    const auth = new google.auth.JWT(
+        clientEmail,
+        undefined,
+        processedPrivateKey,
+        SCOPES
+    );
     return auth;
   } catch (error: any) {
     console.error("[AUTH ERROR] Falha ao criar o cliente de autenticação:", error.message);
