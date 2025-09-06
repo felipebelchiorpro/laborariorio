@@ -12,7 +12,6 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   LayoutDashboard,
   Users,
@@ -24,7 +23,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import SuggestedActions from '@/components/dashboard/suggested-actions';
 import ExamTable from '@/components/dashboard/exam-table';
 
 export default function Home() {
@@ -97,7 +95,6 @@ export default function Home() {
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <SuggestedActions />
           <div className="mt-4">
             <ExamTable />
           </div>
