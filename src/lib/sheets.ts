@@ -8,7 +8,7 @@ const RANGE = 'A:D';
 function getAuth() {
   const credentials = {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY,
+    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
   };
   return new google.auth.GoogleAuth({
     credentials,
@@ -43,46 +43,57 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
   ];
 }
 
+function extractSpreadsheetId(idOrUrl: string): string {
+  if (idOrUrl.includes('spreadsheets/d/')) {
+    const parts = idOrUrl.split('/d/');
+    if (parts.length > 1) {
+      return parts[1].split('/')[0];
+    }
+  }
+  return idOrUrl;
+}
+
 
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
+  const finalSpreadsheetId = extractSpreadsheetId(spreadsheetId);
   try {
     const sheets = getSheetsClient();
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
+      spreadsheetId: finalSpreadsheetId,
       range: RANGE,
     });
 
     const rows = response.data.values;
     
-    if (!rows || rows.length <= 1) { // Menor ou igual a 1 para ignorar apenas o cabeçalho
-      console.log(`No data found for spreadsheetId: ${spreadsheetId}`);
+    if (!rows || rows.length <= 1) { 
+      console.log(`No data found for spreadsheetId: ${finalSpreadsheetId}`);
       return [];
     }
-
-    // Pula a primeira linha (cabeçalho) e depois mapeia e filtra as linhas vazias
+    
     return rows
       .slice(1)
       .map((row, index) => ({ originalRow: row, index }))
       .filter(({ originalRow }) => {
-        return originalRow.some(cell => cell !== null && cell !== '');
+        return originalRow.some(cell => cell !== null && cell.toString().trim() !== '');
       })
       .map(({ originalRow, index }) => {
         return mapRowToExam(originalRow, index);
       });
 
   } catch (error) {
-    console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${spreadsheetId}`, error);
+    console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${finalSpreadsheetId}`, error);
     throw new Error('Failed to fetch data from Google Sheets.');
   }
 }
 
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
+    const finalSpreadsheetId = extractSpreadsheetId(spreadsheetId);
     const sheets = getSheetsClient();
     const values = [mapExamToRow(exam)];
 
     await sheets.spreadsheets.values.append({
-        spreadsheetId,
+        spreadsheetId: finalSpreadsheetId,
         range: RANGE,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
@@ -93,6 +104,7 @@ export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'ro
 
 
 export async function updateExam(spreadsheetId: string, exam: Exam) {
+    const finalSpreadsheetId = extractSpreadsheetId(spreadsheetId);
     if (!exam.rowNumber) {
         throw new Error("O número da linha é necessário para atualizar o exame.");
     }
@@ -101,7 +113,7 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
     const values = [mapExamToRow(exam)];
 
     await sheets.spreadsheets.values.update({
-        spreadsheetId,
+        spreadsheetId: finalSpreadsheetId,
         range,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
