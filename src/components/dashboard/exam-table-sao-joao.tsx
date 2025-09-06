@@ -55,7 +55,7 @@ export default function ExamTable() {
             <DialogTitle>{editingExam ? 'Editar Detalhes do Exame' : 'Registrar Novo Paciente'}</DialogTitle>
           </DialogHeader>
           <PatientForm 
-            exam={exam}
+            exam={editingExam}
             onSubmit={handleAddOrUpdateExam} 
             onDone={() => setIsFormOpen(false)} 
           />
