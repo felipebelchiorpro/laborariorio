@@ -7,6 +7,7 @@ import { ArrowUpDown } from "lucide-react";
 import type { Exam, ExamDestination } from "@/lib/types"
 import { DataTableRowActions } from "./data-table-row-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
 
 
 const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa', 'São João'];
@@ -51,6 +52,18 @@ export const columns: ColumnDef<Exam>[] = [
     cell: ({ row }) => {
       return <div className="font-medium">{row.original.patientName}</div>
     }
+  },
+  {
+    accessorKey: "receivedDate",
+    header: "Data Recebida",
+    cell: ({ row }) => {
+        const { receivedDate } = row.original;
+        return receivedDate ? format(new Date(receivedDate), "dd/MM/yyyy") : 'N/A';
+    }
+  },
+   {
+    accessorKey: "withdrawnBy",
+    header: "Retirado Por",
   },
    {
     accessorKey: "destination",

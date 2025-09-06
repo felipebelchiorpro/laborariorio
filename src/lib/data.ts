@@ -10,6 +10,8 @@ export const exams: Exam[] = [
     destination: 'Laboratório Central',
     result: 'https://example.com/results/joaosilva.pdf',
     observations: 'Paciente em jejum de 8 horas.',
+    receivedDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
+    withdrawnBy: 'Ana Costa',
   },
   {
     id: 'EXM002',
@@ -36,6 +38,8 @@ export const exams: Exam[] = [
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
     destination: 'Clínica Parceira',
     result: 'https://example.com/results/robertbrown.pdf',
+    receivedDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
+    withdrawnBy: 'Carlos Pereira',
   },
   {
     id: 'EXM005',
@@ -62,6 +66,8 @@ export const exams: Exam[] = [
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
     destination: 'Laboratório Central',
     result: 'https://example.com/results/sarahmiller.pdf',
+    receivedDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
+    withdrawnBy: 'Mariana Lima',
   },
   {
     id: 'EXM008',

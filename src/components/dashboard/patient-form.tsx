@@ -33,6 +33,8 @@ const formSchema = z.object({
   collectionDate: z.date({ required_error: "A data da coleta é obrigatória." }),
   destination: z.enum(examDestinations, { required_error: "O destino do exame é obrigatório."}),
   observations: z.string().optional(),
+  receivedDate: z.date().optional(),
+  withdrawnBy: z.string().optional(),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -49,6 +51,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
       patientName: "",
       patientId: "",
       observations: "",
+      withdrawnBy: "",
     },
   })
 
@@ -57,6 +60,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
       ...data,
       patientDob: data.patientDob.toISOString(),
       collectionDate: data.collectionDate.toISOString(),
+      receivedDate: data.receivedDate?.toISOString(),
     };
     onSubmit(examData);
     onDone();
@@ -120,6 +124,36 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
                   setDate={field.onChange}
                   placeholder="Selecione uma data"
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="receivedDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Data Recebida</FormLabel>
+              <FormControl>
+                 <DatePicker 
+                  date={field.value}
+                  setDate={field.onChange}
+                  placeholder="Selecione uma data"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="withdrawnBy"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Retirado Por</FormLabel>
+              <FormControl>
+                <Input placeholder="Nome da pessoa" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
