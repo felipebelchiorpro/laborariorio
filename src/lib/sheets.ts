@@ -13,10 +13,7 @@ function getAuth() {
   }
 
   try {
-    // Decodifica o conteúdo do arquivo de credenciais a partir da string Base64
     const credentialsJson = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
-    
-    // Analisa o JSON para criar o objeto de credenciais
     const credentials = JSON.parse(credentialsJson);
 
     return new google.auth.GoogleAuth({
