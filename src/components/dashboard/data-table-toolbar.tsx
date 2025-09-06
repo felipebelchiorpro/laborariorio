@@ -19,7 +19,7 @@ export function DataTableToolbar<TData>({
   onAddPatient,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
-  const isRowSelected = table.getFilteredSelectedRowModel().rows.length > 0
+  const isRowSelected = Object.keys(table.getState().rowSelection).length > 0
 
   return (
     <div className="flex items-center justify-between">
