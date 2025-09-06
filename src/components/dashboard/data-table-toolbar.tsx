@@ -19,9 +19,6 @@ export function DataTableToolbar<TData>({
   onAddPatient,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
-  const isRowSelected = Object.keys(table.getState().rowSelection).length > 0
-  const withdrawnByColumn = table.getColumn("withdrawnBy")
-  const departmentColumn = table.getColumn("department")
 
   return (
     <div className="flex items-center justify-between">
@@ -34,20 +31,16 @@ export function DataTableToolbar<TData>({
           }
           className="h-9 w-[150px] lg:w-[250px]"
         />
-        {isRowSelected && withdrawnByColumn && (
-          <DataTableFacetedFilter
-            column={withdrawnByColumn}
+        <DataTableFacetedFilter
+            column={table.getColumn("withdrawnBy")}
             title="Retirado Por"
             options={withdrawnByOptions}
-          />
-        )}
-        {isRowSelected && departmentColumn && (
-          <DataTableFacetedFilter
-            column={departmentColumn}
+        />
+        <DataTableFacetedFilter
+            column={table.getColumn("department")}
             title="Departamento"
             options={departmentOptions}
-          />
-        )}
+        />
         {isFiltered && (
           <Button
             variant="ghost"
