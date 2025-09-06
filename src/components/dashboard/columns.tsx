@@ -11,7 +11,9 @@ import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 
 
-export const columns: ColumnDef<Exam>[] = [
+export const getColumns = (
+  onEdit: (exam: Exam) => void
+): ColumnDef<Exam>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -86,6 +88,6 @@ export const columns: ColumnDef<Exam>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => <DataTableRowActions row={row} onEdit={() => onEdit(row.original)} />,
   },
 ]

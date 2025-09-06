@@ -24,6 +24,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam, ExamDestination, WithdrawnBy } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
 import { withdrawnByOptions } from "@/lib/data"
+import { useEffect } from "react"
 
 const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa', 'São João'];
 const withdrawnByValues = withdrawnByOptions.map(opt => opt.value) as [WithdrawnBy, ...WithdrawnBy[]];
@@ -40,11 +41,12 @@ const formSchema = z.object({
 type PatientFormValues = z.infer<typeof formSchema>
 
 interface PatientFormProps {
-    onSubmit: (data: Omit<Exam, 'id'>) => void;
+    exam?: Exam | null;
+    onSubmit: (data: Omit<Exam, 'id'> & { id?: string }) => void;
     onDone: () => void;
 }
 
-export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
+export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,12 +55,35 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
     },
   })
 
+  useEffect(() => {
+    if (exam) {
+      form.reset({
+        patientName: exam.patientName,
+        collectionDate: new Date(exam.collectionDate),
+        destination: exam.destination,
+        observations: exam.observations,
+        receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
+        withdrawnBy: exam.withdrawnBy,
+      });
+    } else {
+      form.reset({
+        patientName: "",
+        collectionDate: undefined,
+        destination: undefined,
+        observations: "",
+        receivedDate: undefined,
+        withdrawnBy: undefined,
+      });
+    }
+  }, [exam, form]);
+
   const patientName = form.watch("patientName");
   const isPatientInfoFilled = patientName && patientName.length >= 2;
 
   function handleSubmit(data: PatientFormValues) {
-    const examData: Omit<Exam, 'id'> = {
+    const examData: Omit<Exam, 'id'> & { id?: string } = {
       ...data,
+      id: exam?.id,
       collectionDate: data.collectionDate.toISOString(),
       receivedDate: data.receivedDate?.toISOString(),
     };
@@ -123,7 +148,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Retirado Por</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isPatientInfoFilled}>
+              <Select onValueChange={field.onChange} value={field.value} disabled={!isPatientInfoFilled}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um local/status" />
@@ -145,7 +170,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Destino do Exame</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o destino" />
@@ -181,7 +206,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
 
         <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onDone}>Cancelar</Button>
-            <Button type="submit">Registrar Paciente</Button>
+            <Button type="submit">{exam ? 'Salvar Alterações' : 'Registrar Paciente'}</Button>
         </div>
       </form>
     </Form>

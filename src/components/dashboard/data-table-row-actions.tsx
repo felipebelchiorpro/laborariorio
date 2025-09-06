@@ -14,10 +14,12 @@ import {
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>
+  onEdit: () => void;
 }
 
 export function DataTableRowActions<TData>({
   row,
+  onEdit,
 }: DataTableRowActionsProps<TData>) {
 
   return (
@@ -32,7 +34,7 @@ export function DataTableRowActions<TData>({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={onEdit}>
             <Pencil className="mr-2 h-4 w-4" />
             Editar Detalhes
         </DropdownMenuItem>
