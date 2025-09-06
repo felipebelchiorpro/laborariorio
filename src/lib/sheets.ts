@@ -18,6 +18,10 @@ async function getSheetsClient() {
   
   try {
     const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    
+    // Log para depuração
+    console.log('[AUTH DEBUG] String decodificada para JSON:', credentialsStr);
+
     const credentials = JSON.parse(credentialsStr);
 
     const auth = new GoogleAuth({
@@ -26,6 +30,8 @@ async function getSheetsClient() {
     });
     
     const client = await auth.getClient();
+
+    // Importar dinamicamente para evitar carregar a biblioteca inteira desnecessariamente
     const { google } = await import('googleapis');
     const sheets = google.sheets({ version: 'v4', auth: client as any });
     return sheets;
