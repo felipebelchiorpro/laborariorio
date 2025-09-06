@@ -13,19 +13,21 @@ function getAuth() {
   }
 
   try {
-    const decodedString = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
-    // Esta é a correção definitiva:
-    // 1. JSON.parse(decodedString) remove a camada externa de aspas e escapes que o Coolify adiciona.
-    // 2. JSON.parse(...) analisa o resultado, que agora é a string JSON limpa das credenciais.
-    const credentials = JSON.parse(JSON.parse(decodedString));
+    const decodedCredentials = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
+    const credentials = JSON.parse(decodedCredentials);
 
-    return new google.auth.GoogleAuth({
-      credentials,
-      scopes: SCOPES,
-    });
+    // Usa o método oficial da biblioteca para carregar as credenciais
+    const auth = google.auth.fromJSON(credentials);
+    if (auth === null) {
+      throw new Error('Falha ao criar autenticação a partir das credenciais JSON.');
+    }
+    // @ts-ignore // A biblioteca pode não tipar 'scopes' aqui, mas é necessário.
+    auth.scopes = SCOPES;
+    return auth;
+
   } catch (error) {
-    console.error("Falha ao decodificar ou analisar as credenciais JSON:", error);
-    throw new Error("As credenciais fornecidas em GOOGLE_APPLICATION_CREDENTIALS_BASE64 não são um JSON válido.");
+    console.error("Falha ao decodificar ou processar as credenciais:", error);
+    throw new Error("As credenciais fornecidas em GOOGLE_APPLICATION_CREDENTIALS_BASE64 não são válidas.");
   }
 }
 
