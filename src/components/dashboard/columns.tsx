@@ -11,17 +11,17 @@ import { DataTableRowActions } from "./data-table-row-actions";
 
 
 const statusVariantMap: Record<ExamStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  "Pending": "outline",
-  "In Analysis": "default",
-  "Completed": "secondary",
-  "Delivered": "destructive", // No green variant, using destructive as a placeholder
+  "Pendente": "outline",
+  "Em Análise": "default",
+  "Concluído": "secondary",
+  "Entregue": "destructive", // No green variant, using destructive as a placeholder
 };
 
 const statusColorMap: Record<ExamStatus, string> = {
-  "Pending": "border-yellow-500 text-yellow-600",
-  "In Analysis": "bg-blue-100 text-blue-800 border-blue-200",
-  "Completed": "bg-green-100 text-green-800 border-green-200",
-  "Delivered": "bg-purple-100 text-purple-800 border-purple-200",
+  "Pendente": "border-yellow-500 text-yellow-600",
+  "Em Análise": "bg-blue-100 text-blue-800 border-blue-200",
+  "Concluído": "bg-green-100 text-green-800 border-green-200",
+  "Entregue": "bg-purple-100 text-purple-800 border-purple-200",
 };
 
 
@@ -35,14 +35,14 @@ export const columns: ColumnDef<Exam>[] = [
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="Selecionar tudo"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="Selecionar linha"
       />
     ),
     enableSorting: false,
@@ -56,7 +56,7 @@ export const columns: ColumnDef<Exam>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Patient
+          Paciente
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -67,7 +67,7 @@ export const columns: ColumnDef<Exam>[] = [
   },
   {
     accessorKey: "examType",
-    header: "Exam Type",
+    header: "Tipo de Exame",
   },
   {
     accessorKey: "collectionDate",
@@ -77,7 +77,7 @@ export const columns: ColumnDef<Exam>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Collection Date
+          Data da Coleta
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )

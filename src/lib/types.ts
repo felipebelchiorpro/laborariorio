@@ -1,6 +1,6 @@
-export type ExamStatus = 'Pending' | 'In Analysis' | 'Completed' | 'Delivered';
+export type ExamStatus = 'Pendente' | 'Em Análise' | 'Concluído' | 'Entregue';
 
-export type ExamType = 'Blood Test' | 'Urinalysis' | 'MRI Scan' | 'X-Ray' | 'Biopsy';
+export type ExamType = 'Exame de Sangue' | 'Urinálise' | 'Ressonância Magnética' | 'Raio-X' | 'Biópsia';
 
 export type Exam = {
   id: string;

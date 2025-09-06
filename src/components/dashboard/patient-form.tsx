@@ -23,14 +23,14 @@ import {
 import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam, ExamType, ExamStatus } from "@/lib/types"
 
-const examTypes: ExamType[] = ['Blood Test', 'Urinalysis', 'MRI Scan', 'X-Ray', 'Biopsy'];
+const examTypes: ExamType[] = ['Exame de Sangue', 'Urinálise', 'Ressonância Magnética', 'Raio-X', 'Biópsia'];
 
 const formSchema = z.object({
-  patientName: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  patientId: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, { message: "Invalid ID/CPF format (xxx.xxx.xxx-xx)." }),
-  patientDob: z.date({ required_error: "Date of birth is required." }),
-  examType: z.enum(examTypes, { required_error: "Exam type is required." }),
-  collectionDate: z.date({ required_error: "Collection date is required." }),
+  patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
+  patientId: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, { message: "Formato de CPF inválido (xxx.xxx.xxx-xx)." }),
+  patientDob: z.date({ required_error: "A data de nascimento é obrigatória." }),
+  examType: z.enum(examTypes, { required_error: "O tipo de exame é obrigatório." }),
+  collectionDate: z.date({ required_error: "A data da coleta é obrigatória." }),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -54,7 +54,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
       ...data,
       patientDob: data.patientDob.toISOString(),
       collectionDate: data.collectionDate.toISOString(),
-      status: 'Pending' as ExamStatus,
+      status: 'Pendente' as ExamStatus,
     };
     onSubmit(examData);
     onDone();
@@ -68,7 +68,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           name="patientName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Patient Name</FormLabel>
+              <FormLabel>Nome do Paciente</FormLabel>
               <FormControl>
                 <Input placeholder="John Doe" {...field} />
               </FormControl>
@@ -81,7 +81,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           name="patientId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ID/CPF</FormLabel>
+              <FormLabel>CPF</FormLabel>
               <FormControl>
                 <Input placeholder="123.456.789-00" {...field} />
               </FormControl>
@@ -94,12 +94,12 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           name="patientDob"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date of Birth</FormLabel>
+              <FormLabel>Data de Nascimento</FormLabel>
               <FormControl>
                 <DatePicker 
                   date={field.value}
                   setDate={field.onChange}
-                  placeholder="Select a date"
+                  placeholder="Selecione uma data"
                 />
               </FormControl>
               <FormMessage />
@@ -111,11 +111,11 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           name="examType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Exam Type</FormLabel>
+              <FormLabel>Tipo de Exame</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select an exam type" />
+                    <SelectValue placeholder="Selecione um tipo de exame" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -133,12 +133,12 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           name="collectionDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Collection Date</FormLabel>
+              <FormLabel>Data da Coleta</FormLabel>
               <FormControl>
                  <DatePicker 
                   date={field.value}
                   setDate={field.onChange}
-                  placeholder="Select a date"
+                  placeholder="Selecione uma data"
                 />
               </FormControl>
               <FormMessage />
@@ -147,8 +147,8 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
         />
 
         <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onDone}>Cancel</Button>
-            <Button type="submit">Register Patient</Button>
+            <Button type="button" variant="outline" onClick={onDone}>Cancelar</Button>
+            <Button type="submit">Registrar Paciente</Button>
         </div>
       </form>
     </Form>

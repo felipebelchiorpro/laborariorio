@@ -30,7 +30,7 @@ export default function ExamTable() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Register New Patient</DialogTitle>
+            <DialogTitle>Registrar Novo Paciente</DialogTitle>
           </DialogHeader>
           <PatientForm onSubmit={addExam} onDone={() => setIsFormOpen(false)} />
         </DialogContent>

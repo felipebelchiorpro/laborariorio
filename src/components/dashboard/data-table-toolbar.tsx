@@ -14,10 +14,10 @@ interface DataTableToolbarProps<TData> {
 }
 
 const statuses = [
-  { value: "Pending", label: "Pending" },
-  { value: "In Analysis", label: "In Analysis" },
-  { value: "Completed", label: "Completed" },
-  { value: "Delivered", label: "Delivered" },
+  { value: "Pendente", label: "Pendente" },
+  { value: "Em Análise", label: "Em Análise" },
+  { value: "Concluído", label: "Concluído" },
+  { value: "Entregue", label: "Entregue" },
 ]
 
 export function DataTableToolbar<TData>({
@@ -30,7 +30,7 @@ export function DataTableToolbar<TData>({
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
-          placeholder="Filter by patient name..."
+          placeholder="Filtrar por nome do paciente..."
           value={(table.getColumn("patientName")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("patientName")?.setFilterValue(event.target.value)
@@ -50,7 +50,7 @@ export function DataTableToolbar<TData>({
             onClick={() => table.resetColumnFilters()}
             className="h-9 px-2 lg:px-3"
           >
-            Reset
+            Resetar
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
@@ -59,7 +59,7 @@ export function DataTableToolbar<TData>({
         <DataTableViewOptions table={table} />
         <Button size="sm" onClick={onAddPatient}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Patient
+            Adicionar Paciente
         </Button>
       </div>
     </div>
