@@ -36,10 +36,10 @@ export default function SaoJoaoPage() {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Painel">
+                <SidebarMenuButton asChild tooltip="Exame São Lucas">
                   <Link href="/">
                     <LayoutDashboard />
-                    Painel
+                    Exame São Lucas
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -59,7 +59,7 @@ export default function SaoJoaoPage() {
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Exames para São João</h1>
+            <h1 className="text-xl font-semibold">Exames de São Joao</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">
