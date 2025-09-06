@@ -7,7 +7,7 @@ export const exams: Exam[] = [
     destination: 'Laboratório Central',
     result: 'https://example.com/results/joaosilva.pdf',
     observations: 'Paciente em jejum de 8 horas.',
-    receivedDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
+    receivedDate: '2024-09-04T12:00:00.000Z',
     withdrawnBy: 'Municipal',
   },
   {
@@ -28,7 +28,7 @@ export const exams: Exam[] = [
     patientName: 'Robert Brown',
     destination: 'Clínica Parceira',
     result: 'https://example.com/results/robertbrown.pdf',
-    receivedDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
+    receivedDate: '2024-09-01T12:00:00.000Z',
     withdrawnBy: 'CEAM',
   },
   {
@@ -48,7 +48,7 @@ export const exams: Exam[] = [
     patientName: 'Sarah Miller',
     destination: 'Laboratório Central',
     result: 'https://example.com/results/sarahmiller.pdf',
-    receivedDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
+    receivedDate: '2024-09-03T12:00:00.000Z',
     withdrawnBy: 'RETIRADO',
   },
   {
