@@ -94,3 +94,10 @@ export const exams: Exam[] = [
     destination: 'Clínica Parceira',
   },
 ];
+
+
+export const withdrawnByOptions = [
+    { value: "Ana Costa", label: "Ana Costa" },
+    { value: "Carlos Pereira", label: "Carlos Pereira" },
+    { value: "Mariana Lima", label: "Mariana Lima" },
+];
