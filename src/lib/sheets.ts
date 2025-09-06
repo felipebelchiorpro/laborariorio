@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 import type { Exam } from './types';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const RANGE = 'A:D'; // Ajustado para refletir a remoção da coluna de resultado
+const RANGE = 'A:D';
 
 function getAuth() {
   const credentials = {
@@ -22,7 +22,7 @@ function getSheetsClient() {
 }
 
 function mapRowToExam(row: any[], index: number): Exam {
-    const rowNumber = index + 2; // +1 para o índice base 1, +1 para pular o cabeçalho
+    const rowNumber = index + 1; // +1 para o índice base 1
     return {
         id: `ROW${rowNumber}`,
         rowNumber,
@@ -45,22 +45,38 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
 
 
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
-  const sheets = getSheetsClient();
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range: RANGE,
-  });
+  try {
+    const sheets = getSheetsClient();
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: RANGE,
+    });
 
-  const rows = response.data.values;
-  if (!rows || rows.length <= 1) { // <= 1 para ignorar o cabeçalho
-    return [];
+    const rows = response.data.values;
+    
+    // Se não houver dados ou a resposta for vazia, retorne um array vazio.
+    if (!rows || rows.length === 0) {
+      console.log(`No data found for spreadsheetId: ${spreadsheetId}`);
+      return [];
+    }
+
+    // Mapeia as linhas para exames, pulando o cabeçalho (índice 0)
+    return rows
+      .map((row, index) => ({ originalRow: row, exam: mapRowToExam(row, index + 1) }))
+      .filter(({ originalRow, exam }, index) => {
+        // Pula a primeira linha (cabeçalho)
+        if (index === 0) return false;
+        // Verifica se a linha não está completamente vazia
+        const isRowEmpty = originalRow.every(cell => cell === null || cell === '');
+        return !isRowEmpty;
+      })
+      .map(({ exam }) => exam);
+
+  } catch (error) {
+    console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${spreadsheetId}`, error);
+    // Lança o erro para que o componente que chamou possa tratá-lo (e mostrar um toast, por exemplo)
+    throw new Error('Failed to fetch data from Google Sheets.');
   }
-
-  // Ignora o cabeçalho (primeira linha) e mapeia o resto
-  // Adiciona um filtro para remover linhas completamente vazias
-  return rows.slice(1)
-    .map((row, index) => mapRowToExam(row, index + 1)) // +1 porque slice(1) muda os índices
-    .filter(exam => exam.patientName || exam.receivedDate || exam.withdrawnBy || exam.observations);
 }
 
 
