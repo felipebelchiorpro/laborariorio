@@ -82,7 +82,7 @@ export default function SaoJoaoPage() {
           </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-          Todos Direitos Reservados - Grupo Belchior 2025
+          2025 Todos Direitos Reservados - Grupo Belchior
         </footer>
       </SidebarInset>
     </SidebarProvider>
