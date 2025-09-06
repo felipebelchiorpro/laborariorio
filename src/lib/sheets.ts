@@ -7,28 +7,31 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D';
 
 function getAuth() {
-  const credentialsBase64 = process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64;
+  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
-  if (!credentialsBase64) {
-    console.error('[AUTH ERROR] A variável de ambiente GOOGLE_APPLICATION_CREDENTIALS_BASE64 não está definida.');
-    throw new Error('A variável de ambiente GOOGLE_APPLICATION_CREDENTIALS_BASE64 não está definida.');
+  if (!clientEmail || !privateKey) {
+    console.error('[AUTH ERROR] As variáveis de ambiente GOOGLE_CLIENT_EMAIL e GOOGLE_PRIVATE_KEY devem estar definidas.');
+    throw new Error('As credenciais do Google não foram configuradas corretamente.');
   }
+
+  // A chave privada pode vir com literais de nova linha '\\n' do ambiente. Substituímos por '\n' real.
+  const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
-    const decodedCredentials = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
-    const credentials = JSON.parse(decodedCredentials);
-
-    const auth = google.auth.fromJSON(credentials);
-    // @ts-ignore
-    auth.scopes = SCOPES;
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: clientEmail,
+        private_key: processedPrivateKey,
+      },
+      scopes: SCOPES,
+    });
     return auth;
-
   } catch (error) {
-    console.error("[AUTH ERROR] Falha ao decodificar ou processar as credenciais:", error);
-    throw new Error("As credenciais fornecidas em GOOGLE_APPLICATION_CREDENTIALS_BASE64 não são válidas.");
+    console.error("[AUTH ERROR] Falha ao criar o cliente de autenticação:", error);
+    throw new Error("As credenciais fornecidas não são válidas.");
   }
 }
-
 
 function getSheetsClient() {
   const auth = getAuth();
@@ -38,22 +41,21 @@ function getSheetsClient() {
 function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2; // +1 for zero-based index, +1 for header row
   const [patientName, receivedDateStr, withdrawnBy, observations] = row;
-  
-  // Log para cada linha processada
-  console.log(`[DEBUG] Processando Linha ${rowNumber}:`, { patientName, receivedDateStr, withdrawnBy, observations });
 
   if (!patientName || String(patientName).trim() === '') {
-    console.log(`[DEBUG] Linha ${rowNumber} ignorada: Nome do paciente está vazio.`);
-    return null; // Ignore rows without a patient name
+    return null;
   }
 
   let receivedDate: string | undefined;
   if (receivedDateStr) {
+    const dateString = String(receivedDateStr).trim();
     const currentYear = getYear(new Date());
-    const dateWithYear = `${String(receivedDateStr).trim()}/${currentYear}`;
     
-    // Tenta analisar a data no formato dd/MM/yyyy
-    const parsedDate = parse(dateWithYear, 'dd/MM/yyyy', new Date());
+    // Tenta analisar com formatos DD/MM e DD/MM/YYYY
+    let parsedDate = parse(`${dateString}/${currentYear}`, 'dd/MM/yyyy', new Date());
+    if (!isValid(parsedDate)) {
+      parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+    }
 
     if (isValid(parsedDate)) {
       receivedDate = parsedDate.toISOString();
@@ -71,13 +73,10 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     observations: observations || '',
   };
   
-  console.log(`[DEBUG] Linha ${rowNumber} mapeada para:`, examResult);
   return examResult;
 }
 
-
 function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
-  // Format the date back to DD/MM for display in the sheet
   const displayDate = exam.receivedDate ? new Date(exam.receivedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
   return [
     exam.patientName || '',
@@ -102,21 +101,17 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 
     const rows = response.data.values;
     
-    console.log('[DEBUG] Dados brutos recebidos da API do Google Sheets:', JSON.stringify(rows, null, 2));
-    
     if (!rows || rows.length <= 1) { 
-      console.log("[INFO] A planilha está vazia ou contém apenas o cabeçalho. Retornando array vazio.");
+      console.log("[INFO] A planilha está vazia ou contém apenas o cabeçalho.");
       return [];
     }
     
     const exams = rows
-      .slice(1) // Skip header
+      .slice(1)
       .map((row, index) => mapRowToExam(row, index))
       .filter((exam): exam is Exam => exam !== null && exam.patientName.trim() !== '');
 
     console.log(`[INFO] Processamento concluído. ${exams.length} exames mapeados.`);
-    console.log('[DEBUG] Exames processados que serão retornados:', exams);
-
     return exams;
 
   } catch (error) {
@@ -124,7 +119,6 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     throw new Error('Failed to fetch data from Google Sheets.');
   }
 }
-
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
     const sheets = getSheetsClient();
@@ -139,7 +133,6 @@ export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'ro
         },
     });
 }
-
 
 export async function updateExam(spreadsheetId: string, exam: Exam) {
     if (!exam.rowNumber) {
