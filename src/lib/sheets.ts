@@ -18,11 +18,9 @@ function getAuth() {
     const decodedCredentials = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
     const credentials = JSON.parse(decodedCredentials);
 
-    const auth = new google.auth.GoogleAuth({
-      credentials,
-      scopes: SCOPES,
-    });
-    
+    const auth = google.auth.fromJSON(credentials);
+    // @ts-ignore
+    auth.scopes = SCOPES;
     return auth;
 
   } catch (error) {
@@ -30,6 +28,7 @@ function getAuth() {
     throw new Error("As credenciais fornecidas em GOOGLE_APPLICATION_CREDENTIALS_BASE64 não são válidas.");
   }
 }
+
 
 function getSheetsClient() {
   const auth = getAuth();
