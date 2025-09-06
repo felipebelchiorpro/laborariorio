@@ -13,8 +13,16 @@ function getAuth() {
   }
 
   try {
-    const credentialsJson = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
-    const credentials = JSON.parse(credentialsJson);
+    // Decodifica a variável de ambiente Base64 para uma string.
+    const decodedString = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
+    
+    // O problema é que a string decodificada pode ser um JSON que contém outra string JSON
+    // Ex: '"{\\"type\\": \\"service_account\\", ...}"'
+    // Primeiro, fazemos o parse dessa string externa para obter a string interna.
+    const innerJsonString = JSON.parse(decodedString);
+
+    // Agora, fazemos o parse da string JSON interna para obter o objeto de credenciais.
+    const credentials = JSON.parse(innerJsonString);
 
     return new google.auth.GoogleAuth({
       credentials,
