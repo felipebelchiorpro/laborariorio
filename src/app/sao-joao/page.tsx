@@ -22,10 +22,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ExamTable from '@/components/dashboard/exam-table-sao-joao';
 
 export default function SaoJoaoPage() {
-  // TODO: Fetch and display exams destined for São João
   return (
     <SidebarProvider>
       <Sidebar>
@@ -91,15 +90,7 @@ export default function SaoJoaoPage() {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="mt-4">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Exames para São João</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Esta página exibirá a lista de exames com destino para São João.</p>
-                    {/* A lógica da tabela de exames filtrada será implementada aqui */}
-                </CardContent>
-             </Card>
+            <ExamTable />
           </div>
         </main>
       </SidebarInset>

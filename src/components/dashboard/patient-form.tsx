@@ -24,7 +24,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam, ExamDestination } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
 
-const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa'];
+const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa', 'São João'];
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),

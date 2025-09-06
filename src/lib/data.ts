@@ -17,7 +17,7 @@ export const exams: Exam[] = [
     patientId: '987.654.321-02',
     patientDob: '1992-08-22',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
-    destination: 'Clínica Parceira',
+    destination: 'São João',
     observations: 'Uso de contraste.',
   },
   {
@@ -43,7 +43,7 @@ export const exams: Exam[] = [
     patientId: '654.123.789-05',
     patientDob: '1995-07-19',
     collectionDate: new Date().toISOString(),
-    destination: 'Laboratório Central',
+    destination: 'São João',
   },
   {
     id: 'EXM006',
@@ -77,7 +77,7 @@ export const exams: Exam[] = [
     patientId: '369.147.258-09',
     patientDob: '2005-01-08',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
-    destination: 'Laboratório Central',
+    destination: 'São João',
   },
   {
     id: 'EXM010',

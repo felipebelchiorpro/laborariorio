@@ -1,4 +1,4 @@
-export type ExamDestination = 'Laboratório Central' | 'Clínica Parceira' | 'Centro de Pesquisa';
+export type ExamDestination = 'Laboratório Central' | 'Clínica Parceira' | 'Centro de Pesquisa' | 'São João';
 
 export type Exam = {
   id: string;
