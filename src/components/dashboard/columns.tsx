@@ -52,10 +52,6 @@ export const columns: ColumnDef<Exam>[] = [
       return <div className="font-medium">{row.original.patientName}</div>
     }
   },
-  {
-    accessorKey: "examType",
-    header: "Tipo de Exame",
-  },
    {
     accessorKey: "destination",
     header: "Destino do Exame",

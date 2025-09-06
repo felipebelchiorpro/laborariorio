@@ -21,17 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
-import type { Exam, ExamType, ExamDestination } from "@/lib/types"
+import type { Exam, ExamDestination } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
 
-const examTypes: ExamType[] = ['Exame de Sangue', 'Urinálise', 'Ressonância Magnética', 'Raio-X', 'Biópsia'];
 const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa'];
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
   patientId: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, { message: "Formato de CPF inválido (xxx.xxx.xxx-xx)." }),
   patientDob: z.date({ required_error: "A data de nascimento é obrigatória." }),
-  examType: z.enum(examTypes, { required_error: "O tipo de exame é obrigatório." }),
   collectionDate: z.date({ required_error: "A data da coleta é obrigatória." }),
   destination: z.enum(examDestinations, { required_error: "O destino do exame é obrigatório."}),
   observations: z.string().optional(),
@@ -106,28 +104,6 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
                   placeholder="Selecione uma data"
                 />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="examType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo de Exame</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tipo de exame" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {examTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
