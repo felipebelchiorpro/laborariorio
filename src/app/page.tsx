@@ -36,18 +36,18 @@ export default function Home() {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Exame São Lucas" isActive>
+                <SidebarMenuButton asChild tooltip="Exames são Lucas" isActive>
                   <Link href="/">
                     <LayoutDashboard />
-                    Exame São Lucas
+                    Exames são Lucas
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="São João">
+                <SidebarMenuButton asChild tooltip="Exames São joão">
                   <Link href="/sao-joao">
                     <MapPin />
-                    São João
+                    Exames São joão
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -59,7 +59,7 @@ export default function Home() {
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Exame São Lucas</h1>
+            <h1 className="text-xl font-semibold">Exames são Lucas</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">
