@@ -8,7 +8,7 @@ const RANGE = 'A:D';
 function getAuth() {
   const credentials = {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    private_key: process.env.GOOGLE_PRIVATE_KEY,
   };
   return new google.auth.GoogleAuth({
     credentials,
@@ -22,7 +22,7 @@ function getSheetsClient() {
 }
 
 function mapRowToExam(row: any[], index: number): Exam {
-    const rowNumber = index + 1; // +1 para o índice base 1
+    const rowNumber = index + 2; // +2 para compensar o índice base 0 e o cabeçalho
     return {
         id: `ROW${rowNumber}`,
         rowNumber,
@@ -54,27 +54,24 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 
     const rows = response.data.values;
     
-    // Se não houver dados ou a resposta for vazia, retorne um array vazio.
-    if (!rows || rows.length === 0) {
+    if (!rows || rows.length <= 1) { // Menor ou igual a 1 para ignorar apenas o cabeçalho
       console.log(`No data found for spreadsheetId: ${spreadsheetId}`);
       return [];
     }
 
-    // Mapeia as linhas para exames, pulando o cabeçalho (índice 0)
+    // Pula a primeira linha (cabeçalho) e depois mapeia e filtra as linhas vazias
     return rows
-      .map((row, index) => ({ originalRow: row, exam: mapRowToExam(row, index + 1) }))
-      .filter(({ originalRow, exam }, index) => {
-        // Pula a primeira linha (cabeçalho)
-        if (index === 0) return false;
-        // Verifica se a linha não está completamente vazia
-        const isRowEmpty = originalRow.every(cell => cell === null || cell === '');
-        return !isRowEmpty;
+      .slice(1)
+      .map((row, index) => ({ originalRow: row, index }))
+      .filter(({ originalRow }) => {
+        return originalRow.some(cell => cell !== null && cell !== '');
       })
-      .map(({ exam }) => exam);
+      .map(({ originalRow, index }) => {
+        return mapRowToExam(originalRow, index);
+      });
 
   } catch (error) {
     console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${spreadsheetId}`, error);
-    // Lança o erro para que o componente que chamou possa tratá-lo (e mostrar um toast, por exemplo)
     throw new Error('Failed to fetch data from Google Sheets.');
   }
 }
