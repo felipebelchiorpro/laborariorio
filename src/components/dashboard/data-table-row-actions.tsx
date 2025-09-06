@@ -1,7 +1,7 @@
 "use client"
 
 import { Row } from "@tanstack/react-table"
-import { MoreHorizontal, FileUp, Pencil } from "lucide-react"
+import { MoreHorizontal, Pencil } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useToast } from "@/hooks/use-toast"
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>
@@ -20,7 +19,6 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
-  const { toast } = useToast();
 
   return (
     <DropdownMenu>
@@ -37,15 +35,6 @@ export function DataTableRowActions<TData>({
         <DropdownMenuItem>
             <Pencil className="mr-2 h-4 w-4" />
             Editar Detalhes
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {
-            toast({
-                title: "Função não disponível",
-                description: "A funcionalidade de upload de resultados ainda não foi implementada.",
-            })
-        }}>
-            <FileUp className="mr-2 h-4 w-4" />
-            Enviar Resultado
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
