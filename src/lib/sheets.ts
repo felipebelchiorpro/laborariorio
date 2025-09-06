@@ -1,6 +1,7 @@
 'use server';
 import { google } from 'googleapis';
 import type { Exam } from './types';
+import { parse, isValid } from 'date-fns';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D';
@@ -16,12 +17,11 @@ function getAuth() {
     const decodedCredentials = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
     const credentials = JSON.parse(decodedCredentials);
 
-    // Usa o método oficial da biblioteca para carregar as credenciais
     const auth = google.auth.fromJSON(credentials);
     if (auth === null) {
       throw new Error('Falha ao criar autenticação a partir das credenciais JSON.');
     }
-    // @ts-ignore // A biblioteca pode não tipar 'scopes' aqui, mas é necessário.
+    // @ts-ignore
     auth.scopes = SCOPES;
     return auth;
 
@@ -31,22 +31,38 @@ function getAuth() {
   }
 }
 
-
 function getSheetsClient() {
   const auth = getAuth();
   return google.sheets({ version: 'v4', auth });
 }
 
-function mapRowToExam(row: any[], index: number): Exam {
-    const rowNumber = index + 2; // +2 to account for 0-based index and header row
-    return {
-        id: `ROW${rowNumber}`,
-        rowNumber,
-        patientName: row[0] || '',
-        receivedDate: row[1] ? new Date(row[1]).toISOString() : undefined,
-        withdrawnBy: row[2] || undefined,
-        observations: row[3] || '',
-    };
+function mapRowToExam(row: any[], index: number): Exam | null {
+  const rowNumber = index + 2;
+  const [patientName, receivedDateStr, withdrawnBy, observations] = row;
+
+  if (!patientName || patientName.trim() === '') {
+    return null; // Ignora linhas sem nome de paciente
+  }
+
+  let receivedDate: string | undefined;
+  if (receivedDateStr) {
+    // Tenta interpretar a data no formato dd/MM/yyyy
+    const parsedDate = parse(receivedDateStr, 'dd/MM/yyyy', new Date());
+    if (isValid(parsedDate)) {
+      receivedDate = parsedDate.toISOString();
+    } else {
+      console.warn(`Data em formato inválido na linha ${rowNumber}: ${receivedDateStr}. A data será ignorada.`);
+    }
+  }
+
+  return {
+    id: `ROW${rowNumber}`,
+    rowNumber,
+    patientName: patientName || '',
+    receivedDate,
+    withdrawnBy: withdrawnBy || undefined,
+    observations: observations || '',
+  };
 }
 
 
@@ -78,10 +94,9 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     }
     
     return rows
-      .slice(1)
-      .map((row, index) => ({ originalRow: row, originalIndex: index }))
-      .filter(({ originalRow }) => originalRow.some(cell => cell && cell.toString().trim() !== ''))
-      .map(({ originalRow, originalIndex }) => mapRowToExam(originalRow, originalIndex));
+      .slice(1) // Pula o cabeçalho
+      .map((row, index) => mapRowToExam(row, index))
+      .filter((exam): exam is Exam => exam !== null && exam.patientName.trim() !== ''); // Filtra linhas vazias e nulas
 
   } catch (error) {
     console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${spreadsheetId}`, error);
