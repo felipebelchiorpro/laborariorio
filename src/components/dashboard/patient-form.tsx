@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
-import type { Exam, ExamType, ExamStatus, ExamDestination } from "@/lib/types"
+import type { Exam, ExamType, ExamDestination } from "@/lib/types"
+import { Textarea } from "../ui/textarea"
 
 const examTypes: ExamType[] = ['Exame de Sangue', 'Urinálise', 'Ressonância Magnética', 'Raio-X', 'Biópsia'];
 const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa'];
@@ -33,6 +34,7 @@ const formSchema = z.object({
   examType: z.enum(examTypes, { required_error: "O tipo de exame é obrigatório." }),
   collectionDate: z.date({ required_error: "A data da coleta é obrigatória." }),
   destination: z.enum(examDestinations, { required_error: "O destino do exame é obrigatório."}),
+  observations: z.string().optional(),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -48,6 +50,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
     defaultValues: {
       patientName: "",
       patientId: "",
+      observations: "",
     },
   })
 
@@ -56,7 +59,6 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
       ...data,
       patientDob: data.patientDob.toISOString(),
       collectionDate: data.collectionDate.toISOString(),
-      status: 'Pendente' as ExamStatus,
     };
     onSubmit(examData);
     onDone();
@@ -165,6 +167,23 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="observations"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Observações</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Digite observações sobre o exame..."
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

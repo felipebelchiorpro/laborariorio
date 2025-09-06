@@ -6,19 +6,11 @@ import { PlusCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
-import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
   onAddPatient: () => void;
 }
-
-const statuses = [
-  { value: "Pendente", label: "Pendente" },
-  { value: "Em Análise", label: "Em Análise" },
-  { value: "Concluído", label: "Concluído" },
-  { value: "Entregue", label: "Entregue" },
-]
 
 export function DataTableToolbar<TData>({
   table,
@@ -37,13 +29,6 @@ export function DataTableToolbar<TData>({
           }
           className="h-9 w-[150px] lg:w-[250px]"
         />
-        {table.getColumn("status") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={statuses}
-          />
-        )}
         {isFiltered && (
           <Button
             variant="ghost"

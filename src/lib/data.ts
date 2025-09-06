@@ -8,9 +8,9 @@ export const exams: Exam[] = [
     patientDob: '1985-05-15',
     examType: 'Exame de Sangue',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
-    status: 'Concluído',
     destination: 'Laboratório Central',
     result: 'https://example.com/results/joaosilva.pdf',
+    observations: 'Paciente em jejum de 8 horas.',
   },
   {
     id: 'EXM002',
@@ -19,8 +19,8 @@ export const exams: Exam[] = [
     patientDob: '1992-08-22',
     examType: 'Ressonância Magnética',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
-    status: 'Em Análise',
     destination: 'Clínica Parceira',
+    observations: 'Uso de contraste.',
   },
   {
     id: 'EXM003',
@@ -29,7 +29,6 @@ export const exams: Exam[] = [
     patientDob: '1978-11-30',
     examType: 'Urinálise',
     collectionDate: new Date().toISOString(),
-    status: 'Pendente',
     destination: 'Laboratório Central',
   },
   {
@@ -39,7 +38,6 @@ export const exams: Exam[] = [
     patientDob: '2001-02-10',
     examType: 'Raio-X',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
-    status: 'Entregue',
     destination: 'Clínica Parceira',
     result: 'https://example.com/results/robertbrown.pdf',
   },
@@ -50,7 +48,6 @@ export const exams: Exam[] = [
     patientDob: '1995-07-19',
     examType: 'Exame de Sangue',
     collectionDate: new Date().toISOString(),
-    status: 'Pendente',
     destination: 'Laboratório Central',
   },
   {
@@ -60,8 +57,8 @@ export const exams: Exam[] = [
     patientDob: '1988-09-05',
     examType: 'Biópsia',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString(),
-    status: 'Em Análise',
     destination: 'Centro de Pesquisa',
+    observations: 'Amostra enviada para análise patológica.',
   },
   {
     id: 'EXM007',
@@ -70,7 +67,6 @@ export const exams: Exam[] = [
     patientDob: '1999-12-12',
     examType: 'Urinálise',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
-    status: 'Concluído',
     destination: 'Laboratório Central',
     result: 'https://example.com/results/sarahmiller.pdf',
   },
@@ -81,7 +77,6 @@ export const exams: Exam[] = [
     patientDob: '1982-04-25',
     examType: 'Raio-X',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
-    status: 'Entregue',
     destination: 'Clínica Parceira',
   },
   {
@@ -91,7 +86,6 @@ export const exams: Exam[] = [
     patientDob: '2005-01-08',
     examType: 'Exame de Sangue',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
-    status: 'Em Análise',
     destination: 'Laboratório Central',
   },
   {
@@ -101,7 +95,6 @@ export const exams: Exam[] = [
     patientDob: '1975-03-03',
     examType: 'Ressonância Magnética',
     collectionDate: new Date().toISOString(),
-    status: 'Pendente',
     destination: 'Clínica Parceira',
   },
 ];
