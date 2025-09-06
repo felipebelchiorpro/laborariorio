@@ -20,6 +20,7 @@ import {
   Bell,
   Search,
   ChevronDown,
+  Building,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,27 +48,15 @@ export default function Home() {
                   Painel
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Pacientes">
-                  <Users />
-                  Pacientes
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Exames">
-                  <FlaskConical />
-                  Exames
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Configurações">
-                <Settings />
-                Configurações
+              <SidebarMenuButton tooltip="Departamentos">
+                <Building />
+                Departamentos
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

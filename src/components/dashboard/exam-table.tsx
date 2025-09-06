@@ -25,7 +25,10 @@ export default function ExamTable() {
       <DataTable 
         columns={columns} 
         data={exams} 
-        onAddPatient={() => setIsFormOpen(true)}
+        onAddPatient={() => {
+          // TODO: Re-enable when department management is implemented
+          // setIsFormOpen(true)
+        }}
       />
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[425px]">
