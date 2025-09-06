@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 import { DataTableFacetedFilter } from "./data-table-faceted-filter"
-import { withdrawnByOptions, departmentOptions } from "@/lib/data"
+import { withdrawnByOptions } from "@/lib/data"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -35,11 +35,6 @@ export function DataTableToolbar<TData>({
             column={table.getColumn("withdrawnBy")}
             title="Retirado Por"
             options={withdrawnByOptions}
-        />
-        <DataTableFacetedFilter
-            column={table.getColumn("department")}
-            title="Departamento"
-            options={departmentOptions}
         />
         {isFiltered && (
           <Button

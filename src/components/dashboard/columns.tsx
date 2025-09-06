@@ -62,10 +62,6 @@ export const columns: ColumnDef<Exam>[] = [
     header: "Retirado Por",
   },
   {
-    accessorKey: "department",
-    header: "Departamento",
-  },
-  {
     accessorKey: "observations",
     header: "OBS",
   },

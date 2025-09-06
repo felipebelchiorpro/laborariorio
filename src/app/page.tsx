@@ -3,24 +3,18 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarFooter,
   SidebarInset,
   SidebarTrigger,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarGroup,
-  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
-  Users,
   FlaskConical,
-  Settings,
   Bell,
   Search,
-  ChevronDown,
-  Building,
   MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -60,16 +54,6 @@ export default function Home() {
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Departamentos">
-                <Building />
-                Departamentos
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">

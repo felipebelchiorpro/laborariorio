@@ -12,7 +12,6 @@ export const exams: Exam[] = [
     observations: 'Paciente em jejum de 8 horas.',
     receivedDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     withdrawnBy: 'Ana Costa',
-    department: 'Cardiologia',
   },
   {
     id: 'EXM002',
@@ -22,7 +21,6 @@ export const exams: Exam[] = [
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     destination: 'São João',
     observations: 'Uso de contraste.',
-    department: 'Radiologia',
   },
   {
     id: 'EXM003',
@@ -31,7 +29,6 @@ export const exams: Exam[] = [
     patientDob: '1978-11-30',
     collectionDate: new Date().toISOString(),
     destination: 'Laboratório Central',
-    department: 'Clínica Geral',
   },
   {
     id: 'EXM004',
@@ -43,7 +40,6 @@ export const exams: Exam[] = [
     result: 'https://example.com/results/robertbrown.pdf',
     receivedDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
     withdrawnBy: 'Carlos Pereira',
-    department: 'Pediatria',
   },
   {
     id: 'EXM005',
@@ -52,7 +48,6 @@ export const exams: Exam[] = [
     patientDob: '1995-07-19',
     collectionDate: new Date().toISOString(),
     destination: 'São João',
-    department: 'Ginecologia',
   },
   {
     id: 'EXM006',
@@ -62,7 +57,6 @@ export const exams: Exam[] = [
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString(),
     destination: 'Centro de Pesquisa',
     observations: 'Amostra enviada para análise patológica.',
-    department: 'Oncologia',
   },
   {
     id: 'EXM007',
@@ -74,7 +68,6 @@ export const exams: Exam[] = [
     result: 'https://example.com/results/sarahmiller.pdf',
     receivedDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
     withdrawnBy: 'Mariana Lima',
-    department: 'Dermatologia',
   },
   {
     id: 'EXM008',
@@ -83,7 +76,6 @@ export const exams: Exam[] = [
     patientDob: '1982-04-25',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
     destination: 'Clínica Parceira',
-    department: 'Ortopedia',
   },
   {
     id: 'EXM009',
@@ -92,7 +84,6 @@ export const exams: Exam[] = [
     patientDob: '2005-01-08',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     destination: 'São João',
-    department: 'Pediatria',
   },
   {
     id: 'EXM010',
@@ -101,7 +92,6 @@ export const exams: Exam[] = [
     patientDob: '1975-03-03',
     collectionDate: new Date().toISOString(),
     destination: 'Clínica Parceira',
-    department: 'Cardiologia',
   },
 ];
 
@@ -110,15 +100,4 @@ export const withdrawnByOptions = [
     { value: "Ana Costa", label: "Ana Costa" },
     { value: "Carlos Pereira", label: "Carlos Pereira" },
     { value: "Mariana Lima", label: "Mariana Lima" },
-];
-
-export const departmentOptions = [
-    { value: "Cardiologia", label: "Cardiologia" },
-    { value: "Radiologia", label: "Radiologia" },
-    { value: "Clínica Geral", label: "Clínica Geral" },
-    { value: "Pediatria", label: "Pediatria" },
-    { value: "Ginecologia", label: "Ginecologia" },
-    { value: "Oncologia", label: "Oncologia" },
-    { value: "Dermatologia", label: "Dermatologia" },
-    { value: "Ortopedia", label: "Ortopedia" },
 ];
