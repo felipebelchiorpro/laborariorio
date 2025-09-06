@@ -21,10 +21,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
-import type { Exam, ExamDestination } from "@/lib/types"
+import type { Exam, ExamDestination, WithdrawnBy } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
+import { withdrawnByOptions } from "@/lib/data"
 
 const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa', 'São João'];
+const withdrawnByValues = withdrawnByOptions.map(opt => opt.value) as [WithdrawnBy, ...WithdrawnBy[]];
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
@@ -32,7 +34,7 @@ const formSchema = z.object({
   destination: z.enum(examDestinations, { required_error: "O destino do exame é obrigatório."}),
   observations: z.string().optional(),
   receivedDate: z.date().optional(),
-  withdrawnBy: z.string().optional(),
+  withdrawnBy: z.enum(withdrawnByValues).optional(),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -48,7 +50,6 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
     defaultValues: {
       patientName: "",
       observations: "",
-      withdrawnBy: "",
     },
   })
 
@@ -122,9 +123,18 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Retirado Por</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome da pessoa" {...field} disabled={!isPatientInfoFilled} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isPatientInfoFilled}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um local/status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {withdrawnByOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

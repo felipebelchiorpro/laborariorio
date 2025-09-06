@@ -4,9 +4,11 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
-import type { Exam } from "@/lib/types"
+import type { Exam, WithdrawnBy } from "@/lib/types"
 import { DataTableRowActions } from "./data-table-row-actions";
 import { format } from "date-fns";
+import { Badge } from "../ui/badge";
+import { cn } from "@/lib/utils";
 
 
 export const columns: ColumnDef<Exam>[] = [
@@ -60,6 +62,23 @@ export const columns: ColumnDef<Exam>[] = [
    {
     accessorKey: "withdrawnBy",
     header: "Retirado Por",
+    cell: ({ row }) => {
+      const withdrawnBy = row.original.withdrawnBy;
+      if (!withdrawnBy) return null;
+
+      const statusColor: Record<WithdrawnBy, string> = {
+        'Municipal': 'bg-white text-black border border-gray-300',
+        'UBS REDENTOR': 'bg-orange-200 text-orange-800',
+        'RETIRADO': 'bg-red-500 text-white',
+        'CEAM': 'bg-pink-500 text-white',
+        'SANTO ANTONIO': 'bg-green-400 text-green-900',
+      };
+      
+      return <Badge className={cn("font-semibold", statusColor[withdrawnBy])}>{withdrawnBy}</Badge>
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id))
+    },
   },
   {
     accessorKey: "observations",
