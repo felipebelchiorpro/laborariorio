@@ -26,9 +26,8 @@ async function getSheetsClient() {
     });
     
     const client = await auth.getClient();
-    // This is an ugly cast, but the smaller library doesn't have the full sheets type.
-    // However, the underlying authenticated client is compatible.
-    const sheets = (await import('googleapis')).google.sheets({ version: 'v4', auth: client as any });
+    const { google } = await import('googleapis');
+    const sheets = google.sheets({ version: 'v4', auth: client as any });
     return sheets;
 
   } catch (error: any) {
@@ -42,7 +41,6 @@ function mapRowToExam(row: any[], index: number): Exam | null {
   const [patientName, receivedDateStr, withdrawnBy, observations] = row;
 
   if (!patientName || String(patientName).trim() === '') {
-    console.log(`[PROCESS INFO] Linha ${rowNumber} ignorada: Nome do paciente está vazio.`);
     return null;
   }
 
@@ -60,13 +58,10 @@ function mapRowToExam(row: any[], index: number): Exam | null {
 
         if (isValid(parsedDate)) {
           receivedDate = parsedDate.toISOString();
-        } else {
-           console.warn(`[DATE PARSE WARN] Data inválida "${receivedDateStr}" na linha ${rowNumber}.`);
         }
       }
     } catch (e) {
-        console.error(`[DATE PARSE ERROR] Erro ao analisar a data "${receivedDateStr}" na linha ${rowNumber}.`, e);
-        receivedDate = undefined;
+        // Silently fail on date parse error, leave date undefined
     }
   }
 
@@ -79,7 +74,6 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     observations: observations || '',
   };
   
-  console.log(`[PROCESS INFO] Linha ${rowNumber} mapeada:`, JSON.stringify(examResult));
   return examResult;
 }
 
@@ -95,10 +89,8 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
 
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   if (!spreadsheetId) {
-    console.log("[INFO] Nenhum ID de planilha fornecido. Retornando array vazio.");
     return [];
   }
-  console.log(`[INFO] Iniciando busca de exames para a planilha: ${spreadsheetId}`);
   try {
     const sheets = await getSheetsClient();
     const response = await sheets.spreadsheets.values.get({
@@ -108,20 +100,15 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 
     const rows = response.data.values;
     
-    console.log('[DEBUG] DADOS BRUTOS RECEBIDOS DA API DO GOOGLE SHEETS:', JSON.stringify(rows, null, 2));
-    
     if (!rows || rows.length <= 1) { 
-      console.log("[INFO] Planilha vazia ou contém apenas o cabeçalho. Linhas recebidas:", rows ? rows.length : 0);
       return [];
     }
     
-    console.log(`[INFO] ${rows.length - 1} linhas de dados encontradas. Iniciando processamento...`);
     const exams = rows
       .slice(1)
       .map((row, index) => mapRowToExam(row, index))
       .filter((exam): exam is Exam => exam !== null);
     
-    console.log(`[INFO] Processamento concluído. ${exams.length} exames válidos foram mapeados.`);
     return exams;
 
   } catch (error) {
