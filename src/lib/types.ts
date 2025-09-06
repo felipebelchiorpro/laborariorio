@@ -11,4 +11,5 @@ export type Exam = {
   observations?: string;
   receivedDate?: string; // ISO 8601 format string
   withdrawnBy?: string;
+  department?: string;
 };

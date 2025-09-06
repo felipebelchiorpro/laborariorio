@@ -23,6 +23,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam, ExamDestination } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
+import { departmentOptions } from "@/lib/data"
 
 const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa', 'São João'];
 
@@ -35,6 +36,7 @@ const formSchema = z.object({
   observations: z.string().optional(),
   receivedDate: z.date().optional(),
   withdrawnBy: z.string().optional(),
+  department: z.string().optional(),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -52,6 +54,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
       patientId: "",
       observations: "",
       withdrawnBy: "",
+      department: "",
     },
   })
 
@@ -155,6 +158,28 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
               <FormControl>
                 <Input placeholder="Nome da pessoa" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="department"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Departamento</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o departamento" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {departmentOptions.map(dest => (
+                    <SelectItem key={dest.value} value={dest.value}>{dest.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
