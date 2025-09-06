@@ -4,13 +4,9 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
-import type { Exam, ExamDestination } from "@/lib/types"
+import type { Exam } from "@/lib/types"
 import { DataTableRowActions } from "./data-table-row-actions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-
-
-const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa', 'São João'];
 
 
 export const columns: ColumnDef<Exam>[] = [
@@ -64,26 +60,6 @@ export const columns: ColumnDef<Exam>[] = [
    {
     accessorKey: "withdrawnBy",
     header: "Retirado Por",
-  },
-   {
-    accessorKey: "destination",
-    header: "Destino do Exame",
-    cell: ({ row }) => {
-      // For now, we'll just display it. A real implementation would
-      // likely involve a state management solution to update the destination.
-      return (
-        <Select defaultValue={row.original.destination}>
-            <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Selecione o destino" />
-            </SelectTrigger>
-            <SelectContent>
-                {examDestinations.map(dest => (
-                    <SelectItem key={dest} value={dest}>{dest}</SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
-      )
-    },
   },
   {
     accessorKey: "observations",
