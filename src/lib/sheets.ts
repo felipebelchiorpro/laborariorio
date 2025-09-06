@@ -21,8 +21,7 @@ function getAuth() {
     console.error(`[AUTH ERROR] ${errorMsg}`);
     throw new Error(errorMsg);
   }
-
-  // Corrigir a formatação da chave privada para o ambiente de produção
+  
   const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
@@ -49,8 +48,8 @@ function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2;
   const [patientName, receivedDateStr, withdrawnBy, observations] = row;
 
-  // A linha só é inválida se a célula do nome do paciente for estritamente nula, indefinida ou uma string vazia.
   if (patientName === null || patientName === undefined || String(patientName).trim() === '') {
+    console.log(`[PROCESS INFO] Linha ${rowNumber} ignorada: Nome do paciente está vazio.`);
     return null;
   }
 
@@ -68,10 +67,12 @@ function mapRowToExam(row: any[], index: number): Exam | null {
 
           if (isValid(parsedDate)) {
             receivedDate = parsedDate.toISOString();
+          } else {
+             console.warn(`[DATE PARSE WARN] Data inválida "${receivedDateStr}" na linha ${rowNumber}.`);
           }
       }
     } catch (e) {
-        console.error(`[DATE PARSE ERROR] Erro ao analisar a data "${receivedDateStr}" na linha ${rowNumber}. Deixando o campo em branco.`);
+        console.error(`[DATE PARSE ERROR] Erro ao analisar a data "${receivedDateStr}" na linha ${rowNumber}.`, e);
         receivedDate = undefined;
     }
   }
@@ -85,6 +86,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     observations: observations || '',
   };
   
+  console.log(`[PROCESS INFO] Linha ${rowNumber} mapeada:`, JSON.stringify(examResult));
   return examResult;
 }
 
@@ -114,12 +116,14 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 
     const rows = response.data.values;
     
+    console.log('[DEBUG] DADOS BRUTOS RECEBIDOS DA API DO GOOGLE SHEETS:', JSON.stringify(rows, null, 2));
+    
     if (!rows || rows.length <= 1) { 
-      console.log("[INFO] Planilha vazia ou contém apenas o cabeçalho.");
+      console.log("[INFO] Planilha vazia ou contém apenas o cabeçalho. Linhas recebidas:", rows ? rows.length : 0);
       return [];
     }
     
-    console.log(`[INFO] ${rows.length - 1} linhas de dados encontradas. Processando...`);
+    console.log(`[INFO] ${rows.length - 1} linhas de dados encontradas. Iniciando processamento...`);
     const exams = rows
       .slice(1)
       .map((row, index) => mapRowToExam(row, index))
