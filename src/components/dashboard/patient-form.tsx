@@ -33,7 +33,6 @@ const formSchema = z.object({
   observations: z.string().optional(),
   receivedDate: z.date({ required_error: "A data de recebimento é obrigatória." }),
   withdrawnBy: z.enum(withdrawnByValues, { required_error: "O campo 'Retirado por' é obrigatório." }),
-  result: z.string().url({ message: "Por favor, insira uma URL válida." }).optional().or(z.literal('')),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -50,7 +49,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
     defaultValues: {
       patientName: "",
       observations: "",
-      result: "",
     },
   })
 
@@ -61,7 +59,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         observations: exam.observations,
         receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
         withdrawnBy: exam.withdrawnBy,
-        result: exam.result,
       });
     } else {
       form.reset({
@@ -69,7 +66,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         observations: "",
         receivedDate: undefined,
         withdrawnBy: undefined,
-        result: "",
       });
     }
   }, [exam, form]);
@@ -156,20 +152,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="result"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Link do Resultado</FormLabel>
-              <FormControl>
-                <Input placeholder="https://..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onDone}>Cancelar</Button>
             <Button type="submit">{exam ? 'Salvar Alterações' : 'Registrar Paciente'}</Button>

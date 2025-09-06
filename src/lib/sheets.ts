@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 import type { Exam } from './types';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const RANGE = 'A:F'; // Assumindo que os dados ocupam as colunas de A a F
+const RANGE = 'A:D'; // Ajustado para refletir a remoção da coluna de resultado
 
 function getAuth() {
   const credentials = {
@@ -30,7 +30,6 @@ function mapRowToExam(row: any[], index: number): Exam {
         receivedDate: row[1] ? new Date(row[1]).toISOString() : undefined,
         withdrawnBy: row[2] || undefined,
         observations: row[3] || '',
-        result: row[4] || '',
     };
 }
 
@@ -41,7 +40,6 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
     exam.receivedDate ? new Date(exam.receivedDate).toLocaleDateString('pt-BR') : '',
     exam.withdrawnBy || '',
     exam.observations || '',
-    exam.result || '',
   ];
 }
 
@@ -83,7 +81,7 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
         throw new Error("O número da linha é necessário para atualizar o exame.");
     }
     const sheets = getSheetsClient();
-    const range = `A${exam.rowNumber}:F${exam.rowNumber}`;
+    const range = `A${exam.rowNumber}:D${exam.rowNumber}`;
     const values = [mapExamToRow(exam)];
 
     await sheets.spreadsheets.values.update({
