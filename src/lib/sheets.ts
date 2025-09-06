@@ -13,14 +13,7 @@ function getAuth() {
   }
 
   try {
-    let credentialsJson = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
-    
-    // Remove leading/trailing whitespace and quotes that might be added by the environment
-    credentialsJson = credentialsJson.trim();
-    if (credentialsJson.startsWith('"') && credentialsJson.endsWith('"')) {
-      credentialsJson = credentialsJson.slice(1, -1);
-    }
-    
+    const credentialsJson = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
     const credentials = JSON.parse(credentialsJson);
 
     return new google.auth.GoogleAuth({
@@ -61,23 +54,15 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
   ];
 }
 
-function extractSpreadsheetId(idOrUrl: string): string {
-  if (idOrUrl.includes('spreadsheets/d/')) {
-    const parts = idOrUrl.split('/d/');
-    if (parts.length > 1) {
-      return parts[1].split('/')[0];
-    }
-  }
-  return idOrUrl;
-}
-
-
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
-  const finalSpreadsheetId = extractSpreadsheetId(spreadsheetId);
+  if (!spreadsheetId) {
+    console.warn("Spreadsheet ID is missing.");
+    return [];
+  }
   try {
     const sheets = getSheetsClient();
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: finalSpreadsheetId,
+      spreadsheetId,
       range: RANGE,
     });
 
@@ -87,27 +72,25 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
       return [];
     }
     
-    // Filter out completely empty rows
     return rows
-      .slice(1) // Skip header row
+      .slice(1)
       .map((row, index) => ({ originalRow: row, originalIndex: index }))
       .filter(({ originalRow }) => originalRow.some(cell => cell && cell.toString().trim() !== ''))
       .map(({ originalRow, originalIndex }) => mapRowToExam(originalRow, originalIndex));
 
   } catch (error) {
-    console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${finalSpreadsheetId}`, error);
+    console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${spreadsheetId}`, error);
     throw new Error('Failed to fetch data from Google Sheets.');
   }
 }
 
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
-    const finalSpreadsheetId = extractSpreadsheetId(spreadsheetId);
     const sheets = getSheetsClient();
     const values = [mapExamToRow(exam)];
 
     await sheets.spreadsheets.values.append({
-        spreadsheetId: finalSpreadsheetId,
+        spreadsheetId,
         range: RANGE,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
@@ -118,7 +101,6 @@ export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'ro
 
 
 export async function updateExam(spreadsheetId: string, exam: Exam) {
-    const finalSpreadsheetId = extractSpreadsheetId(spreadsheetId);
     if (!exam.rowNumber) {
         throw new Error("O número da linha é necessário para atualizar o exame.");
     }
@@ -127,7 +109,7 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
     const values = [mapExamToRow(exam)];
 
     await sheets.spreadsheets.values.update({
-        spreadsheetId: finalSpreadsheetId,
+        spreadsheetId,
         range,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
