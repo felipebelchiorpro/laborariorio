@@ -13,16 +13,18 @@ function getAuth() {
   }
 
   try {
-    // Decodifica a variável de ambiente Base64 para uma string.
     const decodedString = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
     
-    // O problema é que a string decodificada pode ser um JSON que contém outra string JSON
-    // Ex: '"{\\"type\\": \\"service_account\\", ...}"'
-    // Primeiro, fazemos o parse dessa string externa para obter a string interna.
-    const innerJsonString = JSON.parse(decodedString);
-
-    // Agora, fazemos o parse da string JSON interna para obter o objeto de credenciais.
-    const credentials = JSON.parse(innerJsonString);
+    let credentials;
+    try {
+      // Primeira tentativa: Analisar diretamente, assumindo que é um JSON limpo.
+      credentials = JSON.parse(decodedString);
+    } catch (e) {
+      // Segunda tentativa: Se a primeira falhar, assume que a string decodificada é um JSON que contém outra string JSON.
+      // Isso acontece quando o ambiente envolve a variável em aspas extras.
+      const innerJsonString = JSON.parse(decodedString);
+      credentials = JSON.parse(innerJsonString);
+    }
 
     return new google.auth.GoogleAuth({
       credentials,
