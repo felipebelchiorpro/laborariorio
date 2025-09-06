@@ -1,35 +1,69 @@
 "use client";
 
 import * as React from "react";
-import { saoJoaoExams } from "@/lib/data";
 import type { Exam } from "@/lib/types";
 import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PatientForm } from "./patient-form";
+import { addExam, getExams, updateExam } from "@/lib/sheets";
+import { toast } from "@/hooks/use-toast";
+
+const SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID!;
 
 export default function ExamTable() {
-  const [exams, setExams] = React.useState<Exam[]>(saoJoaoExams);
+  const [exams, setExams] = React.useState<Exam[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingExam, setEditingExam] = React.useState<Exam | null>(null);
-  
-  const handleAddOrUpdateExam = (examData: Omit<Exam, 'id'> & { id?: string }) => {
-    if (examData.id) {
-      // Update existing exam
-      const updatedExams = exams.map(exam =>
-        exam.id === examData.id ? { ...exam, ...examData } : exam
-      );
-      setExams(updatedExams);
-    } else {
-      // Add new exam
-      const newExam: Exam = {
-        ...examData,
-        id: `SJE${(exams.length + 1).toString().padStart(3, '0')}`,
-      };
-      setExams(prevExams => [newExam, ...prevExams]);
+
+  const fetchExams = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getExams(SHEET_ID);
+      setExams(data);
+    } catch (error) {
+      console.error("Failed to fetch exams for São João:", error);
+      toast({
+        title: "Erro ao buscar exames",
+        description: "Não foi possível carregar os dados da planilha. Tente novamente mais tarde.",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchExams();
+  }, [fetchExams]);
+
+  const handleAddOrUpdateExam = async (examData: Omit<Exam, 'id' | 'rowNumber'> & { id?: string }) => {
+    try {
+      if (editingExam?.id) {
+        // Update existing exam
+        const updatedExam = { ...editingExam, ...examData };
+        await updateExam(SHEET_ID, updatedExam);
+        toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
+      } else {
+        // Add new exam
+        const newExam: Omit<Exam, 'id' | 'rowNumber'> = {
+          ...examData,
+        };
+        await addExam(SHEET_ID, newExam);
+        toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
+      }
+      fetchExams(); // Refresh data
+    } catch (error) {
+       console.error("Failed to save exam for São João:", error);
+       toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o exame na planilha.",
+        variant: "destructive"
+      })
     }
   };
-
+  
   const openFormForEdit = (exam: Exam) => {
     setEditingExam(exam);
     setIsFormOpen(true);

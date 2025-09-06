@@ -33,13 +33,14 @@ const formSchema = z.object({
   observations: z.string().optional(),
   receivedDate: z.date({ required_error: "A data de recebimento é obrigatória." }),
   withdrawnBy: z.enum(withdrawnByValues, { required_error: "O campo 'Retirado por' é obrigatório." }),
+  result: z.string().url({ message: "Por favor, insira uma URL válida." }).optional().or(z.literal('')),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
 
 interface PatientFormProps {
     exam?: Exam | null;
-    onSubmit: (data: Omit<Exam, 'id'> & { id?: string }) => void;
+    onSubmit: (data: Omit<Exam, 'id' | 'rowNumber'> & { id?: string }) => void;
     onDone: () => void;
 }
 
@@ -49,6 +50,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
     defaultValues: {
       patientName: "",
       observations: "",
+      result: "",
     },
   })
 
@@ -59,6 +61,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         observations: exam.observations,
         receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
         withdrawnBy: exam.withdrawnBy,
+        result: exam.result,
       });
     } else {
       form.reset({
@@ -66,12 +69,13 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         observations: "",
         receivedDate: undefined,
         withdrawnBy: undefined,
+        result: "",
       });
     }
   }, [exam, form]);
 
   function handleSubmit(data: PatientFormValues) {
-    const examData: Omit<Exam, 'id'> & { id?: string } = {
+    const examData: Omit<Exam, 'id' | 'rowNumber'> & { id?: string } = {
       ...data,
       id: exam?.id,
       receivedDate: data.receivedDate?.toISOString(),
@@ -147,6 +151,19 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
                   className="resize-none"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="result"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Link do Resultado</FormLabel>
+              <FormControl>
+                <Input placeholder="https://..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
