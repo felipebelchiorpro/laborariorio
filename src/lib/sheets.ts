@@ -22,7 +22,7 @@ function getAuth() {
     throw new Error(errorMsg);
   }
 
-  // A chave privada do ambiente do Coolify vem com literais '\\n'. Substituímos por '\n' real.
+  // Corrige o problema de formatação da chave privada vinda de variáveis de ambiente
   const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
