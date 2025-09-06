@@ -29,8 +29,6 @@ const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica P
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
-  patientId: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, { message: "Formato de CPF inválido (xxx.xxx.xxx-xx)." }),
-  patientDob: z.date({ required_error: "A data de nascimento é obrigatória." }),
   collectionDate: z.date({ required_error: "A data da coleta é obrigatória." }),
   destination: z.enum(examDestinations, { required_error: "O destino do exame é obrigatório."}),
   observations: z.string().optional(),
@@ -51,7 +49,6 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       patientName: "",
-      patientId: "",
       observations: "",
       withdrawnBy: "",
       department: "",
@@ -59,13 +56,11 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
   })
 
   const patientName = form.watch("patientName");
-  const patientId = form.watch("patientId");
-  const isPatientInfoFilled = patientName && patientName.length >= 2 && patientId && /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(patientId);
+  const isPatientInfoFilled = patientName && patientName.length >= 2;
 
   function handleSubmit(data: PatientFormValues) {
     const examData: Omit<Exam, 'id'> = {
       ...data,
-      patientDob: data.patientDob.toISOString(),
       collectionDate: data.collectionDate.toISOString(),
       receivedDate: data.receivedDate?.toISOString(),
     };
@@ -84,36 +79,6 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
               <FormLabel>Nome do Paciente</FormLabel>
               <FormControl>
                 <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="patientId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>CPF</FormLabel>
-              <FormControl>
-                <Input placeholder="123.456.789-00" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         <FormField
-          control={form.control}
-          name="patientDob"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data de Nascimento</FormLabel>
-              <FormControl>
-                <DatePicker 
-                  date={field.value}
-                  setDate={field.onChange}
-                  placeholder="Selecione uma data"
-                />
               </FormControl>
               <FormMessage />
             </FormItem>
