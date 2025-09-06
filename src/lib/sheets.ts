@@ -1,13 +1,13 @@
 
 'use server';
-import { google } from 'googleapis';
+import { GoogleAuth } from 'google-auth-library';
 import type { Exam } from './types';
 import { parse, isValid, getYear } from 'date-fns';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const RANGE = 'A:D';
+const RANGE = 'A:D'; 
 
-async function getAuth() {
+async function getSheetsClient() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
 
   if (!base64Credentials) {
@@ -15,18 +15,21 @@ async function getAuth() {
     console.error(`[AUTH ERROR] ${errorMsg}`);
     throw new Error(errorMsg);
   }
-
+  
   try {
     const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
     const credentials = JSON.parse(credentialsStr);
 
-    const auth = new google.auth.GoogleAuth({
+    const auth = new GoogleAuth({
       credentials,
       scopes: SCOPES,
     });
     
     const client = await auth.getClient();
-    return client;
+    // This is an ugly cast, but the smaller library doesn't have the full sheets type.
+    // However, the underlying authenticated client is compatible.
+    const sheets = (await import('googleapis')).google.sheets({ version: 'v4', auth: client as any });
+    return sheets;
 
   } catch (error: any) {
     console.error("[AUTH ERROR] Falha ao decodificar ou processar as credenciais Base64:", error.message);
@@ -34,13 +37,8 @@ async function getAuth() {
   }
 }
 
-async function getSheetsClient() {
-  const auth = await getAuth();
-  return google.sheets({ version: 'v4', auth });
-}
-
 function mapRowToExam(row: any[], index: number): Exam | null {
-  const rowNumber = index + 2;
+  const rowNumber = index + 2; 
   const [patientName, receivedDateStr, withdrawnBy, observations] = row;
 
   if (!patientName || String(patientName).trim() === '') {
