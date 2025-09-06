@@ -21,9 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
-import type { Exam, ExamType, ExamStatus } from "@/lib/types"
+import type { Exam, ExamType, ExamStatus, ExamDestination } from "@/lib/types"
 
 const examTypes: ExamType[] = ['Exame de Sangue', 'Urinálise', 'Ressonância Magnética', 'Raio-X', 'Biópsia'];
+const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa'];
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
@@ -31,6 +32,7 @@ const formSchema = z.object({
   patientDob: z.date({ required_error: "A data de nascimento é obrigatória." }),
   examType: z.enum(examTypes, { required_error: "O tipo de exame é obrigatório." }),
   collectionDate: z.date({ required_error: "A data da coleta é obrigatória." }),
+  destination: z.enum(examDestinations, { required_error: "O destino do exame é obrigatório."}),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -141,6 +143,28 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
                   placeholder="Selecione uma data"
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="destination"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Destino do Exame</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o destino" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {examDestinations.map(dest => (
+                    <SelectItem key={dest} value={dest}>{dest}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

@@ -9,6 +9,7 @@ export const exams: Exam[] = [
     examType: 'Exame de Sangue',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
     status: 'Concluído',
+    destination: 'Laboratório Central',
     result: 'https://example.com/results/joaosilva.pdf',
   },
   {
@@ -19,6 +20,7 @@ export const exams: Exam[] = [
     examType: 'Ressonância Magnética',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     status: 'Em Análise',
+    destination: 'Clínica Parceira',
   },
   {
     id: 'EXM003',
@@ -28,6 +30,7 @@ export const exams: Exam[] = [
     examType: 'Urinálise',
     collectionDate: new Date().toISOString(),
     status: 'Pendente',
+    destination: 'Laboratório Central',
   },
   {
     id: 'EXM004',
@@ -37,6 +40,7 @@ export const exams: Exam[] = [
     examType: 'Raio-X',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
     status: 'Entregue',
+    destination: 'Clínica Parceira',
     result: 'https://example.com/results/robertbrown.pdf',
   },
   {
@@ -47,6 +51,7 @@ export const exams: Exam[] = [
     examType: 'Exame de Sangue',
     collectionDate: new Date().toISOString(),
     status: 'Pendente',
+    destination: 'Laboratório Central',
   },
   {
     id: 'EXM006',
@@ -56,6 +61,7 @@ export const exams: Exam[] = [
     examType: 'Biópsia',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString(),
     status: 'Em Análise',
+    destination: 'Centro de Pesquisa',
   },
   {
     id: 'EXM007',
@@ -65,6 +71,7 @@ export const exams: Exam[] = [
     examType: 'Urinálise',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
     status: 'Concluído',
+    destination: 'Laboratório Central',
     result: 'https://example.com/results/sarahmiller.pdf',
   },
   {
@@ -75,6 +82,7 @@ export const exams: Exam[] = [
     examType: 'Raio-X',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
     status: 'Entregue',
+    destination: 'Clínica Parceira',
   },
   {
     id: 'EXM009',
@@ -84,6 +92,7 @@ export const exams: Exam[] = [
     examType: 'Exame de Sangue',
     collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     status: 'Em Análise',
+    destination: 'Laboratório Central',
   },
   {
     id: 'EXM010',
@@ -93,5 +102,6 @@ export const exams: Exam[] = [
     examType: 'Ressonância Magnética',
     collectionDate: new Date().toISOString(),
     status: 'Pendente',
+    destination: 'Clínica Parceira',
   },
 ];
