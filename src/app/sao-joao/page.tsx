@@ -81,6 +81,9 @@ export default function SaoJoaoPage() {
             <ExamTable />
           </div>
         </main>
+        <footer className="border-t p-4 text-center text-sm text-muted-foreground">
+          Todos Direitos Reservados - Grupo Belchior 2025
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );
