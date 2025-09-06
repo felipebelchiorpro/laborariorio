@@ -8,26 +8,18 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D';
 
 async function getAuth() {
-  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY;
+  const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
 
-  if (!clientEmail) {
-    const errorMsg = 'A variável de ambiente GOOGLE_CLIENT_EMAIL não está definida.';
-    console.error(`[AUTH ERROR] ${errorMsg}`);
-    throw new Error(errorMsg);
-  }
-  if (!privateKey) {
-    const errorMsg = 'A variável de ambiente GOOGLE_PRIVATE_KEY não está definida.';
+  if (!base64Credentials) {
+    const errorMsg = 'A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não está definida.';
     console.error(`[AUTH ERROR] ${errorMsg}`);
     throw new Error(errorMsg);
   }
 
   try {
-    const credentials = {
-      client_email: clientEmail,
-      private_key: privateKey.replace(/\\n/g, '\n'),
-    };
-    
+    const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    const credentials = JSON.parse(credentialsStr);
+
     const auth = new google.auth.GoogleAuth({
       credentials,
       scopes: SCOPES,
@@ -37,8 +29,8 @@ async function getAuth() {
     return client;
 
   } catch (error: any) {
-    console.error("[AUTH ERROR] Falha ao criar o cliente de autenticação:", error.message);
-    throw new Error("As credenciais fornecidas não são válidas.");
+    console.error("[AUTH ERROR] Falha ao decodificar ou processar as credenciais Base64:", error.message);
+    throw new Error("As credenciais fornecidas em GOOGLE_CREDENTIALS_BASE64 não são válidas.");
   }
 }
 
@@ -51,7 +43,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2;
   const [patientName, receivedDateStr, withdrawnBy, observations] = row;
 
-  if (patientName === null || patientName === undefined || String(patientName).trim() === '') {
+  if (!patientName || String(patientName).trim() === '') {
     console.log(`[PROCESS INFO] Linha ${rowNumber} ignorada: Nome do paciente está vazio.`);
     return null;
   }
@@ -61,18 +53,18 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     try {
       const dateString = String(receivedDateStr).trim();
       if (dateString) {
-          const currentYear = getYear(new Date());
-          
-          let parsedDate = parse(`${dateString}/${currentYear}`, 'dd/MM/yyyy', new Date());
-          if (!isValid(parsedDate)) {
-            parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
-          }
+        let parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+        
+        if (!isValid(parsedDate)) {
+           const currentYear = getYear(new Date());
+           parsedDate = parse(`${dateString}/${currentYear}`, 'dd/MM/yyyy', new Date());
+        }
 
-          if (isValid(parsedDate)) {
-            receivedDate = parsedDate.toISOString();
-          } else {
-             console.warn(`[DATE PARSE WARN] Data inválida "${receivedDateStr}" na linha ${rowNumber}.`);
-          }
+        if (isValid(parsedDate)) {
+          receivedDate = parsedDate.toISOString();
+        } else {
+           console.warn(`[DATE PARSE WARN] Data inválida "${receivedDateStr}" na linha ${rowNumber}.`);
+        }
       }
     } catch (e) {
         console.error(`[DATE PARSE ERROR] Erro ao analisar a data "${receivedDateStr}" na linha ${rowNumber}.`, e);
@@ -92,7 +84,6 @@ function mapRowToExam(row: any[], index: number): Exam | null {
   console.log(`[PROCESS INFO] Linha ${rowNumber} mapeada:`, JSON.stringify(examResult));
   return examResult;
 }
-
 
 function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
   const displayDate = exam.receivedDate ? new Date(exam.receivedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
