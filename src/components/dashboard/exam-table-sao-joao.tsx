@@ -9,9 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PatientForm } from "./patient-form";
 
 export default function ExamTable() {
-  const [exams, setExams] = React.useState<Exam[]>(() => 
-    initialExams.filter(exam => exam.destination === 'São João')
-  );
+  const [exams, setExams] = React.useState<Exam[]>(initialExams);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingExam, setEditingExam] = React.useState<Exam | null>(null);
   
@@ -33,7 +31,7 @@ export default function ExamTable() {
       initialExams.push(newExam);
     }
     // Refresh local state
-    setExams(initialExams.filter(exam => exam.destination === 'São João'));
+    setExams([...initialExams]);
   };
 
   const openFormForEdit = (exam: Exam) => {

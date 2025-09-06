@@ -21,17 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
-import type { Exam, ExamDestination, WithdrawnBy } from "@/lib/types"
+import type { Exam, WithdrawnBy } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
 import { withdrawnByOptions } from "@/lib/data"
 import { useEffect } from "react"
 
-const examDestinations: ExamDestination[] = ['Laboratório Central', 'Clínica Parceira', 'Centro de Pesquisa', 'São João'];
 const withdrawnByValues = withdrawnByOptions.map(opt => opt.value) as [WithdrawnBy, ...WithdrawnBy[]];
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
-  destination: z.enum(examDestinations, { required_error: "O destino do exame é obrigatório."}),
   observations: z.string().optional(),
   receivedDate: z.date().optional(),
   withdrawnBy: z.enum(withdrawnByValues).optional(),
@@ -58,7 +56,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
     if (exam) {
       form.reset({
         patientName: exam.patientName,
-        destination: exam.destination,
         observations: exam.observations,
         receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
         withdrawnBy: exam.withdrawnBy,
@@ -66,7 +63,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
     } else {
       form.reset({
         patientName: "",
-        destination: undefined,
         observations: "",
         receivedDate: undefined,
         withdrawnBy: undefined,
@@ -136,28 +132,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
                 <SelectContent>
                   {withdrawnByOptions.map(opt => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="destination"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Destino do Exame</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o destino" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {examDestinations.map(dest => (
-                    <SelectItem key={dest} value={dest}>{dest}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
