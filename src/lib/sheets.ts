@@ -22,6 +22,7 @@ function getAuth() {
     throw new Error(errorMsg);
   }
   
+  // Esta é a correção crucial para o erro "DECODER routines::unsupported"
   const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
