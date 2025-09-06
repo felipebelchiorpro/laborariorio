@@ -29,10 +29,10 @@ import { useEffect } from "react"
 const withdrawnByValues = withdrawnByOptions.map(opt => opt.value) as [WithdrawnBy, ...WithdrawnBy[]];
 
 const formSchema = z.object({
-  patientName: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
+  patientName: z.string().min(2, { message: "O nome do paciente é obrigatório e deve ter pelo menos 2 caracteres." }),
   observations: z.string().optional(),
-  receivedDate: z.date().optional(),
-  withdrawnBy: z.enum(withdrawnByValues).optional(),
+  receivedDate: z.date({ required_error: "A data de recebimento é obrigatória." }),
+  withdrawnBy: z.enum(withdrawnByValues, { required_error: "O campo 'Retirado por' é obrigatório." }),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -69,9 +69,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
       });
     }
   }, [exam, form]);
-
-  const patientName = form.watch("patientName");
-  const isPatientInfoFilled = patientName && patientName.length >= 2;
 
   function handleSubmit(data: PatientFormValues) {
     const examData: Omit<Exam, 'id'> & { id?: string } = {
@@ -110,7 +107,6 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
                   date={field.value}
                   setDate={field.onChange}
                   placeholder="Selecione uma data"
-                  disabled={!isPatientInfoFilled}
                 />
               </FormControl>
               <FormMessage />
@@ -123,7 +119,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Retirado Por</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={!isPatientInfoFilled}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um local/status" />
