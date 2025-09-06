@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Column } from "@tanstack/react-table"
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -22,7 +22,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
-import { Checkbox } from "../ui/checkbox"
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>
@@ -114,7 +113,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                           : "opacity-50 [&_svg]:invisible"
                       )}
                     >
-                     <Checkbox checked={isSelected} className="border-none" />
+                      <Check className={cn("h-4 w-4")} />
                     </div>
                     {option.icon && (
                       <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
