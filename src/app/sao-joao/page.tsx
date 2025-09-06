@@ -10,25 +10,22 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarGroup,
-  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
-  Users,
   FlaskConical,
-  Settings,
   Bell,
   Search,
-  ChevronDown,
   Building,
   MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import ExamTable from '@/components/dashboard/exam-table';
 import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function Home() {
+export default function SaoJoaoPage() {
+  // TODO: Fetch and display exams destined for São João
   return (
     <SidebarProvider>
       <Sidebar>
@@ -42,7 +39,7 @@ export default function Home() {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Painel" isActive>
+                <SidebarMenuButton asChild tooltip="Painel">
                   <Link href="/">
                     <LayoutDashboard />
                     Painel
@@ -50,7 +47,7 @@ export default function Home() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="São João">
+                <SidebarMenuButton asChild tooltip="São João" isActive>
                   <Link href="/sao-joao">
                     <MapPin />
                     São João
@@ -75,7 +72,7 @@ export default function Home() {
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Painel</h1>
+            <h1 className="text-xl font-semibold">Exames para São João</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">
@@ -94,7 +91,15 @@ export default function Home() {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="mt-4">
-            <ExamTable />
+             <Card>
+                <CardHeader>
+                    <CardTitle>Exames para São João</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p>Esta página exibirá a lista de exames com destino para São João.</p>
+                    {/* A lógica da tabela de exames filtrada será implementada aqui */}
+                </CardContent>
+             </Card>
           </div>
         </main>
       </SidebarInset>
