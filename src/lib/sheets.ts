@@ -1,3 +1,4 @@
+
 'use server';
 import { google } from 'googleapis';
 import type { Exam } from './types';
@@ -10,12 +11,18 @@ function getAuth() {
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
   const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
-  if (!clientEmail || !privateKey) {
-    console.error('[AUTH ERROR] As variáveis de ambiente GOOGLE_CLIENT_EMAIL e GOOGLE_PRIVATE_KEY devem estar definidas.');
-    throw new Error('As credenciais do Google não foram configuradas corretamente.');
+  if (!clientEmail) {
+    const errorMsg = 'A variável de ambiente GOOGLE_CLIENT_EMAIL não está definida.';
+    console.error(`[AUTH ERROR] ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+  if (!privateKey) {
+    const errorMsg = 'A variável de ambiente GOOGLE_PRIVATE_KEY não está definida.';
+    console.error(`[AUTH ERROR] ${errorMsg}`);
+    throw new Error(errorMsg);
   }
 
-  // A chave privada pode vir com literais de nova linha '\\n' do ambiente. Substituímos por '\n' real.
+  // A chave privada do ambiente do Coolify vem com literais '\\n'. Substituímos por '\n' real.
   const processedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
@@ -27,8 +34,8 @@ function getAuth() {
       scopes: SCOPES,
     });
     return auth;
-  } catch (error) {
-    console.error("[AUTH ERROR] Falha ao criar o cliente de autenticação:", error);
+  } catch (error: any) {
+    console.error("[AUTH ERROR] Falha ao criar o cliente de autenticação:", error.message);
     throw new Error("As credenciais fornecidas não são válidas.");
   }
 }
@@ -115,7 +122,8 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     return exams;
 
   } catch (error) {
-    console.error(`[Sheets API Error] Falha ao buscar exames para a planilha ${spreadsheetId}`, error);
+    const errorMessage = (error instanceof Error) ? error.message : String(error);
+    console.error(`[Sheets API Error] Falha ao buscar exames para a planilha ${spreadsheetId}`, errorMessage);
     throw new Error('Failed to fetch data from Google Sheets.');
   }
 }
