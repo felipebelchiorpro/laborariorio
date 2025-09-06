@@ -17,12 +17,11 @@ function getAuth() {
     const decodedCredentials = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
     const credentials = JSON.parse(decodedCredentials);
 
-    const auth = google.auth.fromJSON(credentials);
-    if (auth === null) {
-      throw new Error('Falha ao criar autenticação a partir das credenciais JSON.');
-    }
-    // @ts-ignore
-    auth.scopes = SCOPES;
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: SCOPES,
+    });
+    
     return auth;
 
   } catch (error) {
@@ -37,17 +36,22 @@ function getSheetsClient() {
 }
 
 function mapRowToExam(row: any[], index: number): Exam | null {
-  const rowNumber = index + 2;
+  const rowNumber = index + 2; // +1 for zero-based index, +1 for header row
   const [patientName, receivedDateStr, withdrawnBy, observations] = row;
 
   if (!patientName || patientName.trim() === '') {
-    return null; // Ignora linhas sem nome de paciente
+    return null; // Ignore rows without a patient name
   }
 
   let receivedDate: string | undefined;
   if (receivedDateStr) {
-    // Tenta interpretar a data no formato dd/MM/yyyy
-    const parsedDate = parse(receivedDateStr, 'dd/MM/yyyy', new Date());
+    const currentYear = new Date().getFullYear();
+    // Append the current year to the date string, assuming dates are for the current year
+    const dateWithYear = `${receivedDateStr}/${currentYear}`;
+    
+    // Try to parse the date in dd/MM/yyyy format
+    const parsedDate = parse(dateWithYear, 'dd/MM/yyyy', new Date());
+
     if (isValid(parsedDate)) {
       receivedDate = parsedDate.toISOString();
     } else {
@@ -67,9 +71,11 @@ function mapRowToExam(row: any[], index: number): Exam | null {
 
 
 function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
+  // Format the date back to DD/MM for display in the sheet
+  const displayDate = exam.receivedDate ? new Date(exam.receivedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
   return [
     exam.patientName || '',
-    exam.receivedDate ? new Date(exam.receivedDate).toLocaleDateString('pt-BR') : '',
+    displayDate,
     exam.withdrawnBy || '',
     exam.observations || '',
   ];
@@ -94,9 +100,9 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     }
     
     return rows
-      .slice(1) // Pula o cabeçalho
+      .slice(1) // Skip header
       .map((row, index) => mapRowToExam(row, index))
-      .filter((exam): exam is Exam => exam !== null && exam.patientName.trim() !== ''); // Filtra linhas vazias e nulas
+      .filter((exam): exam is Exam => exam !== null && exam.patientName.trim() !== ''); // Filter out empty/null rows
 
   } catch (error) {
     console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${spreadsheetId}`, error);
