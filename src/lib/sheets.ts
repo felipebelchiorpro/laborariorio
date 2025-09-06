@@ -6,9 +6,15 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D';
 
 function getAuth() {
+  // Decode the Base64 encoded private key
+  const privateKey = Buffer.from(
+    process.env.GOOGLE_PRIVATE_KEY || '',
+    'base64'
+  ).toString('ascii');
+
   const credentials = {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    private_key: privateKey,
   };
   return new google.auth.GoogleAuth({
     credentials,
@@ -22,7 +28,7 @@ function getSheetsClient() {
 }
 
 function mapRowToExam(row: any[], index: number): Exam {
-    const rowNumber = index + 2; // +2 para compensar o índice base 0 e o cabeçalho
+    const rowNumber = index + 2; // +2 to account for 0-based index and header row
     return {
         id: `ROW${rowNumber}`,
         rowNumber,
@@ -66,19 +72,15 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     const rows = response.data.values;
     
     if (!rows || rows.length <= 1) { 
-      console.log(`No data found for spreadsheetId: ${finalSpreadsheetId}`);
       return [];
     }
     
+    // Filter out completely empty rows
     return rows
-      .slice(1)
-      .map((row, index) => ({ originalRow: row, index }))
-      .filter(({ originalRow }) => {
-        return originalRow.some(cell => cell !== null && cell.toString().trim() !== '');
-      })
-      .map(({ originalRow, index }) => {
-        return mapRowToExam(originalRow, index);
-      });
+      .slice(1) // Skip header row
+      .map((row, index) => ({ originalRow: row, originalIndex: index }))
+      .filter(({ originalRow }) => originalRow.some(cell => cell && cell.toString().trim() !== ''))
+      .map(({ originalRow, originalIndex }) => mapRowToExam(originalRow, originalIndex));
 
   } catch (error) {
     console.error(`[Sheets API Error] Failed to get exams for spreadsheetId: ${finalSpreadsheetId}`, error);
