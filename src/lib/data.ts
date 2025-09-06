@@ -4,7 +4,6 @@ export const exams: Exam[] = [
   {
     id: 'EXM001',
     patientName: 'João da Silva',
-    collectionDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
     destination: 'Laboratório Central',
     result: 'https://example.com/results/joaosilva.pdf',
     observations: 'Paciente em jejum de 8 horas.',
@@ -14,7 +13,6 @@ export const exams: Exam[] = [
   {
     id: 'EXM002',
     patientName: 'Maria Oliveira',
-    collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     destination: 'São João',
     observations: 'Uso de contraste.',
     withdrawnBy: 'UBS REDENTOR',
@@ -22,14 +20,12 @@ export const exams: Exam[] = [
   {
     id: 'EXM003',
     patientName: 'Alice Johnson',
-    collectionDate: new Date().toISOString(),
     destination: 'Laboratório Central',
     withdrawnBy: 'RETIRADO',
   },
   {
     id: 'EXM004',
     patientName: 'Robert Brown',
-    collectionDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
     destination: 'Clínica Parceira',
     result: 'https://example.com/results/robertbrown.pdf',
     receivedDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
@@ -38,13 +34,11 @@ export const exams: Exam[] = [
   {
     id: 'EXM005',
     patientName: 'Emily Davis',
-    collectionDate: new Date().toISOString(),
     destination: 'São João',
   },
   {
     id: 'EXM006',
     patientName: 'Michael Wilson',
-    collectionDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString(),
     destination: 'Centro de Pesquisa',
     observations: 'Amostra enviada para análise patológica.',
     withdrawnBy: 'SANTO ANTONIO',
@@ -52,7 +46,6 @@ export const exams: Exam[] = [
   {
     id: 'EXM007',
     patientName: 'Sarah Miller',
-    collectionDate: new Date(new Date().setDate(new Date().getDate() - 4)).toISOString(),
     destination: 'Laboratório Central',
     result: 'https://example.com/results/sarahmiller.pdf',
     receivedDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
@@ -61,21 +54,18 @@ export const exams: Exam[] = [
   {
     id: 'EXM008',
     patientName: 'David Martinez',
-    collectionDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
     destination: 'Clínica Parceira',
     withdrawnBy: 'Municipal',
   },
   {
     id: 'EXM009',
     patientName: 'Laura Garcia',
-    collectionDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     destination: 'São João',
     withdrawnBy: 'RETIRADO',
   },
   {
     id: 'EXM010',
     patientName: 'James Rodriguez',
-    collectionDate: new Date().toISOString(),
     destination: 'Clínica Parceira',
     withdrawnBy: 'UBS REDENTOR',
   },

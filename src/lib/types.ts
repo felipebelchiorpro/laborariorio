@@ -5,7 +5,6 @@ export type WithdrawnBy = 'Municipal' | 'UBS REDENTOR' | 'RETIRADO' | 'CEAM' | '
 export type Exam = {
   id: string;
   patientName: string;
-  collectionDate: string; // ISO 8601 format string
   destination: ExamDestination;
   result?: string; // URL to PDF or Google Drive link
   observations?: string;
