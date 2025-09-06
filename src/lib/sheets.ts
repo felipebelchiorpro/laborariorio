@@ -6,23 +6,29 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D';
 
 function getAuth() {
-  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64) {
+  const credentialsBase64 = process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64;
+
+  if (!credentialsBase64) {
     throw new Error('A variável de ambiente GOOGLE_APPLICATION_CREDENTIALS_BASE64 não está definida.');
   }
 
-  // Decodifica o conteúdo do arquivo de credenciais a partir da string Base64
-  const credentialsJson = Buffer.from(
-    process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64,
-    'base64'
-  ).toString('utf-8');
-  
-  const credentials = JSON.parse(credentialsJson);
+  try {
+    // Decodifica o conteúdo do arquivo de credenciais a partir da string Base64
+    const credentialsJson = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
+    
+    // Analisa o JSON para criar o objeto de credenciais
+    const credentials = JSON.parse(credentialsJson);
 
-  return new google.auth.GoogleAuth({
-    credentials,
-    scopes: SCOPES,
-  });
+    return new google.auth.GoogleAuth({
+      credentials,
+      scopes: SCOPES,
+    });
+  } catch (error) {
+    console.error("Falha ao decodificar ou analisar as credenciais JSON:", error);
+    throw new Error("As credenciais fornecidas em GOOGLE_APPLICATION_CREDENTIALS_BASE64 não são um JSON válido.");
+  }
 }
+
 
 function getSheetsClient() {
   const auth = getAuth();
