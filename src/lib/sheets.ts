@@ -13,7 +13,14 @@ function getAuth() {
   }
 
   try {
-    const credentialsJson = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
+    let credentialsJson = Buffer.from(credentialsBase64, 'base64').toString('utf-8');
+    
+    // Remove leading/trailing whitespace and quotes that might be added by the environment
+    credentialsJson = credentialsJson.trim();
+    if (credentialsJson.startsWith('"') && credentialsJson.endsWith('"')) {
+      credentialsJson = credentialsJson.slice(1, -1);
+    }
+    
     const credentials = JSON.parse(credentialsJson);
 
     return new google.auth.GoogleAuth({
