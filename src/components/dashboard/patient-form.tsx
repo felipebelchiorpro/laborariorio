@@ -58,6 +58,10 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
     },
   })
 
+  const patientName = form.watch("patientName");
+  const patientId = form.watch("patientId");
+  const isPatientInfoFilled = patientName && patientName.length >= 2 && patientId && /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(patientId);
+
   function handleSubmit(data: PatientFormValues) {
     const examData: Omit<Exam, 'id'> = {
       ...data,
@@ -143,6 +147,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
                   date={field.value}
                   setDate={field.onChange}
                   placeholder="Selecione uma data"
+                  disabled={!isPatientInfoFilled}
                 />
               </FormControl>
               <FormMessage />
@@ -156,7 +161,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
             <FormItem>
               <FormLabel>Retirado Por</FormLabel>
               <FormControl>
-                <Input placeholder="Nome da pessoa" {...field} />
+                <Input placeholder="Nome da pessoa" {...field} disabled={!isPatientInfoFilled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -168,7 +173,7 @@ export function PatientForm({ onSubmit, onDone }: PatientFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Departamento</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isPatientInfoFilled}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o departamento" />
