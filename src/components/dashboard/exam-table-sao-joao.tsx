@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { exams as initialExams } from "@/lib/data";
+import { saoJoaoExams } from "@/lib/data";
 import type { Exam } from "@/lib/types";
 import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
@@ -9,29 +9,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PatientForm } from "./patient-form";
 
 export default function ExamTable() {
-  const [exams, setExams] = React.useState<Exam[]>(initialExams);
+  const [exams, setExams] = React.useState<Exam[]>(saoJoaoExams);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingExam, setEditingExam] = React.useState<Exam | null>(null);
   
   const handleAddOrUpdateExam = (examData: Omit<Exam, 'id'> & { id?: string }) => {
     if (examData.id) {
       // Update existing exam
-      const updatedExams = initialExams.map(exam =>
+      const updatedExams = exams.map(exam =>
         exam.id === examData.id ? { ...exam, ...examData } : exam
       );
-      // This is a mock, so we update the initialExams array
-      initialExams.length = 0;
-      Array.prototype.push.apply(initialExams, updatedExams);
+      setExams(updatedExams);
     } else {
       // Add new exam
       const newExam: Exam = {
         ...examData,
-        id: `EXM${(initialExams.length + 1).toString().padStart(3, '0')}`,
+        id: `SJE${(exams.length + 1).toString().padStart(3, '0')}`,
       };
-      initialExams.push(newExam);
+      setExams(prevExams => [newExam, ...prevExams]);
     }
-    // Refresh local state
-    setExams([...initialExams]);
   };
 
   const openFormForEdit = (exam: Exam) => {
@@ -59,7 +55,7 @@ export default function ExamTable() {
             <DialogTitle>{editingExam ? 'Editar Detalhes do Exame' : 'Registrar Novo Paciente'}</DialogTitle>
           </DialogHeader>
           <PatientForm 
-            exam={editingExam}
+            exam={exam}
             onSubmit={handleAddOrUpdateExam} 
             onDone={() => setIsFormOpen(false)} 
           />
