@@ -94,17 +94,6 @@ export default function Home() {
               <Bell className="h-5 w-5" />
               <span className="sr-only">Toggle notifications</span>
             </Button>
-            <div className="flex items-center gap-2">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="@admin" />
-                <AvatarFallback>AD</AvatarFallback>
-              </Avatar>
-              <div className="hidden flex-col text-sm lg:flex">
-                <span className="font-medium">Admin</span>
-                <span className="text-muted-foreground">admin@labflow.com</span>
-              </div>
-               <ChevronDown className="hidden h-4 w-4 text-muted-foreground lg:block" />
-            </div>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
