@@ -33,10 +33,7 @@ export default function Home() {
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3">
             <FlaskConical className="h-8 w-8 text-primary" />
-            <div className="flex flex-col">
-              <h2 className="text-lg font-semibold">LabFlow</h2>
-              <p className="text-xs text-muted-foreground">Exames Médicos</p>
-            </div>
+            <h2 className="text-2xl font-bold">LabFlow</h2>
           </div>
         </SidebarHeader>
         <SidebarContent>
