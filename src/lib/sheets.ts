@@ -57,7 +57,10 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   }
 
   // Ignora o cabeçalho (primeira linha) e mapeia o resto
-  return rows.slice(1).map((row, index) => mapRowToExam(row, index));
+  // Adiciona um filtro para remover linhas completamente vazias
+  return rows.slice(1)
+    .map((row, index) => mapRowToExam(row, index + 1)) // +1 porque slice(1) muda os índices
+    .filter(exam => exam.patientName || exam.receivedDate || exam.withdrawnBy || exam.observations);
 }
 
 
