@@ -1,42 +1,32 @@
 
 'use server';
 import { GoogleAuth } from 'google-auth-library';
-import { google } from 'googleapis';
 import type { Exam } from './types';
 import { parse, isValid, getYear } from 'date-fns';
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 const RANGE = 'A:D'; 
 
-async function getSheetsClient() {
-  console.log('[VERCEL_DEBUG] Iniciando getSheetsClient...');
+async function getAuthToken() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
 
   if (!base64Credentials) {
-    const errorMsg = 'A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não foi encontrada.';
-    console.error(`[AUTH ERROR] ${errorMsg}`);
-    throw new Error(errorMsg);
+    throw new Error('A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não foi encontrada.');
   }
-  console.log('[VERCEL_DEBUG] Variável GOOGLE_CREDENTIALS_BASE64 encontrada.');
 
   try {
     const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
     const credentials = JSON.parse(credentialsStr);
-    console.log('[VERCEL_DEBUG] Credenciais decodificadas e parseadas com sucesso.');
 
     const auth = new GoogleAuth({
       credentials,
       scopes: SCOPES,
     });
-    
-    const client = await auth.getClient();
-    console.log('[VERCEL_DEBUG] Cliente de autenticação do Google criado com sucesso.');
-    
-    const sheets = google.sheets({ version: 'v4', auth: client as any });
-    return sheets;
 
+    const authToken = await auth.getAccessToken();
+    return authToken;
   } catch (error: any) {
-    console.error("[AUTH ERROR] Falha ao decodificar ou processar as credenciais Base64:", error.message);
+    console.error("[AUTH ERROR] Falha ao processar as credenciais ou obter o token:", error.message);
     throw new Error("As credenciais fornecidas em GOOGLE_CREDENTIALS_BASE64 não são válidas.");
   }
 }
@@ -70,7 +60,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     }
   }
 
-  const examResult: Exam = {
+  return {
     id: `ROW${rowNumber}`,
     rowNumber,
     patientName: String(patientName || ''),
@@ -78,8 +68,6 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     withdrawnBy: withdrawnBy || undefined,
     observations: observations || '',
   };
-  
-  return examResult;
 }
 
 function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
@@ -92,34 +80,40 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
   ];
 }
 
+
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   if (!spreadsheetId) {
-    console.log('[VERCEL_DEBUG] getExams chamado sem spreadsheetId. Retornando array vazio.');
     return [];
   }
   try {
-    console.log(`[VERCEL_DEBUG] Buscando exames para a planilha: ${spreadsheetId}`);
-    const sheets = await getSheetsClient();
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: RANGE,
-    });
-    console.log(`[VERCEL_DEBUG] Resposta da API do Google Sheets recebida para a planilha ${spreadsheetId}.`);
+    const token = await getAuthToken();
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${RANGE}`;
 
-    const rows = response.data.values;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      cache: 'no-store', 
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("[Sheets API Fetch Error] A API retornou um erro:", errorData);
+      throw new Error(`Falha na chamada da API do Sheets: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const rows = data.values;
     
     if (!rows || rows.length <= 1) { 
-      console.log(`[VERCEL_DEBUG] Nenhum dado encontrado na planilha ${spreadsheetId} (ou apenas o cabeçalho).`);
       return [];
     }
     
-    console.log(`[VERCEL_DEBUG] ${rows.length - 1} linhas de dados encontradas. Iniciando mapeamento.`);
     const exams = rows
       .slice(1)
-      .map((row, index) => mapRowToExam(row, index))
-      .filter((exam): exam is Exam => exam !== null);
+      .map((row: any[], index: number) => mapRowToExam(row, index))
+      .filter((exam: Exam | null): exam is Exam => exam !== null);
     
-    console.log(`[VERCEL_DEBUG] Mapeamento concluído. Retornando ${exams.length} exames.`);
     return exams;
 
   } catch (error) {
@@ -130,33 +124,47 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 }
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
-    const sheets = await getSheetsClient();
+    const token = await getAuthToken();
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${RANGE}:append?valueInputOption=USER_ENTERED`;
+    
     const values = [mapExamToRow(exam)];
-
-    await sheets.spreadsheets.values.append({
-        spreadsheetId,
-        range: RANGE,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-            values,
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ values }),
     });
+
+     if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Falha ao adicionar exame: ${errorData.error.message}`);
+    }
 }
 
 export async function updateExam(spreadsheetId: string, exam: Exam) {
     if (!exam.rowNumber) {
         throw new Error("O número da linha é necessário para atualizar o exame.");
     }
-    const sheets = await getSheetsClient();
+    const token = await getAuthToken();
     const range = `A${exam.rowNumber}:D${exam.rowNumber}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`;
+
     const values = [mapExamToRow(exam)];
 
-    await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-            values,
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ values }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Falha ao atualizar exame: ${errorData.error.message}`);
+    }
 }
