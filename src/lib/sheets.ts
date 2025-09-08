@@ -9,17 +9,20 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D'; 
 
 async function getSheetsClient() {
+  console.log('[VERCEL_DEBUG] Iniciando getSheetsClient...');
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
 
   if (!base64Credentials) {
-    const errorMsg = 'A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não está definida.';
+    const errorMsg = 'A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não foi encontrada.';
     console.error(`[AUTH ERROR] ${errorMsg}`);
     throw new Error(errorMsg);
   }
-  
+  console.log('[VERCEL_DEBUG] Variável GOOGLE_CREDENTIALS_BASE64 encontrada.');
+
   try {
     const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
     const credentials = JSON.parse(credentialsStr);
+    console.log('[VERCEL_DEBUG] Credenciais decodificadas e parseadas com sucesso.');
 
     const auth = new GoogleAuth({
       credentials,
@@ -27,6 +30,7 @@ async function getSheetsClient() {
     });
     
     const client = await auth.getClient();
+    console.log('[VERCEL_DEBUG] Cliente de autenticação do Google criado com sucesso.');
     
     const sheets = google.sheets({ version: 'v4', auth: client as any });
     return sheets;
@@ -90,26 +94,32 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
 
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   if (!spreadsheetId) {
+    console.log('[VERCEL_DEBUG] getExams chamado sem spreadsheetId. Retornando array vazio.');
     return [];
   }
   try {
+    console.log(`[VERCEL_DEBUG] Buscando exames para a planilha: ${spreadsheetId}`);
     const sheets = await getSheetsClient();
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: RANGE,
     });
+    console.log(`[VERCEL_DEBUG] Resposta da API do Google Sheets recebida para a planilha ${spreadsheetId}.`);
 
     const rows = response.data.values;
     
     if (!rows || rows.length <= 1) { 
+      console.log(`[VERCEL_DEBUG] Nenhum dado encontrado na planilha ${spreadsheetId} (ou apenas o cabeçalho).`);
       return [];
     }
     
+    console.log(`[VERCEL_DEBUG] ${rows.length - 1} linhas de dados encontradas. Iniciando mapeamento.`);
     const exams = rows
       .slice(1)
       .map((row, index) => mapRowToExam(row, index))
       .filter((exam): exam is Exam => exam !== null);
     
+    console.log(`[VERCEL_DEBUG] Mapeamento concluído. Retornando ${exams.length} exames.`);
     return exams;
 
   } catch (error) {
