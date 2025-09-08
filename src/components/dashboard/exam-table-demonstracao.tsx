@@ -10,8 +10,10 @@ import { toast } from "@/hooks/use-toast";
 
 const parseDate = (dateStr: string) => {
     const [day, month] = dateStr.split('/');
-    const year = new Date().getFullYear(); 
-    return new Date(`${year}-${month}-${day}`).toISOString();
+    // Use a fixed year to prevent hydration errors
+    const year = 2024;
+    // Construct date as UTC to avoid timezone issues
+    return new Date(Date.UTC(year, parseInt(month) - 1, parseInt(day))).toISOString();
 }
 
 const demoExams: Exam[] = [
