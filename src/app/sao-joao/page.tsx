@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import ExamTable from '@/components/dashboard/exam-table-sao-joao';
 
-export default function CacondePage() {
+export default function SaoJoaoPage() {
   return (
     <SidebarProvider>
       <Sidebar>
@@ -37,18 +37,18 @@ export default function CacondePage() {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="São Lucas">
+                <SidebarMenuButton asChild tooltip="Exames do São Lucas">
                   <Link href="/">
                     <LayoutDashboard />
-                    São Lucas
+                    Exames do São Lucas
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Caconde" isActive>
-                  <Link href="/caconde">
+                <SidebarMenuButton asChild tooltip="Exames de São João" isActive>
+                  <Link href="/sao-joao">
                     <MapPin />
-                    Caconde
+                    Exames de São João
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -68,7 +68,7 @@ export default function CacondePage() {
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Caconde</h1>
+            <h1 className="text-xl font-semibold">Exames de São João</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">

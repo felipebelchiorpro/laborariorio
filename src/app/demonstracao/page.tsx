@@ -37,18 +37,18 @@ export default function DemonstracaoPage() {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="São Lucas">
+                <SidebarMenuButton asChild tooltip="Exames do São Lucas">
                   <Link href="/">
                     <LayoutDashboard />
-                    São Lucas
+                    Exames do São Lucas
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Caconde">
-                  <Link href="/caconde">
+                <SidebarMenuButton asChild tooltip="Exames de São João">
+                  <Link href="/sao-joao">
                     <MapPin />
-                    Caconde
+                    Exames de São João
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
