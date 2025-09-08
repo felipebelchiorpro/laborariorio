@@ -16,38 +16,47 @@ import {
   Bell,
   Search,
   MapPin,
+  FileVideo,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import ExamTable from '@/components/dashboard/exam-table-sao-joao';
 
-export default function SaoJoaoPage() {
+export default function CacondePage() {
   return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3">
             <FlaskConical className="h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-bold">LabFlow</h2>
+            <h2 className="text-2xl font-bold">Laboratório Caconde</h2>
           </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Exames são Lucas">
+                <SidebarMenuButton asChild tooltip="São Lucas">
                   <Link href="/">
                     <LayoutDashboard />
-                    Exames são Lucas
+                    São Lucas
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Exames São joão" isActive>
-                  <Link href="/sao-joao">
+                <SidebarMenuButton asChild tooltip="Caconde" isActive>
+                  <Link href="/caconde">
                     <MapPin />
-                    Exames São joão
+                    Caconde
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Demonstração">
+                  <Link href="/demonstracao">
+                    <FileVideo />
+                    Demonstração
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -59,7 +68,7 @@ export default function SaoJoaoPage() {
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Exames São joão</h1>
+            <h1 className="text-xl font-semibold">Caconde</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">

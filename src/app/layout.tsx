@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Painel LabFlow',
+  title: 'Laboratório Caconde',
   description: 'Um painel moderno para gerenciar exames médicos, desde o registro do paciente até a entrega dos resultados.',
 };
 

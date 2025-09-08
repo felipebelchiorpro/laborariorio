@@ -20,10 +20,10 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import ExamTable from '@/components/dashboard/exam-table';
 import Link from 'next/link';
+import ExamTable from '@/components/dashboard/exam-table-demonstracao';
 
-export default function Home() {
+export default function DemonstracaoPage() {
   return (
     <SidebarProvider>
       <Sidebar>
@@ -37,7 +37,7 @@ export default function Home() {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="São Lucas" isActive>
+                <SidebarMenuButton asChild tooltip="São Lucas">
                   <Link href="/">
                     <LayoutDashboard />
                     São Lucas
@@ -52,8 +52,8 @@ export default function Home() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Demonstração">
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Demonstração" isActive>
                   <Link href="/demonstracao">
                     <FileVideo />
                     Demonstração
@@ -68,7 +68,7 @@ export default function Home() {
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">São Lucas</h1>
+            <h1 className="text-xl font-semibold">Demonstração</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">
