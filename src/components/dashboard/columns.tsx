@@ -4,11 +4,34 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
-import type { Exam, WithdrawnBy } from "@/lib/types"
+import type { Exam } from "@/lib/types"
 import { DataTableRowActions } from "./data-table-row-actions";
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
+
+// Função para gerar uma cor com base no hash do texto
+const stringToColor = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  return color;
+}
+
+// Função para determinar se a cor de fundo é clara ou escura
+const isColorLight = (hexcolor: string) => {
+  const r = parseInt(hexcolor.substr(1, 2), 16);
+  const g = parseInt(hexcolor.substr(3, 2), 16);
+  const b = parseInt(hexcolor.substr(5, 2), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return yiq >= 128;
+}
 
 
 export const getColumns = (
@@ -68,15 +91,17 @@ export const getColumns = (
       const withdrawnBy = row.original.withdrawnBy;
       if (!withdrawnBy) return null;
 
-      const statusColor: Record<WithdrawnBy, string> = {
-        'Municipal': 'bg-white text-black border border-gray-300',
-        'UBS REDENTOR': 'bg-orange-200 text-orange-800',
-        'RETIRADO': 'bg-red-500 text-white',
-        'CEAM': 'bg-pink-500 text-white',
-        'SANTO ANTONIO': 'bg-green-400 text-green-900',
-      };
-      
-      return <Badge className={cn("font-semibold", statusColor[withdrawnBy])}>{withdrawnBy}</Badge>
+      const bgColor = stringToColor(withdrawnBy);
+      const textColor = isColorLight(bgColor) ? 'black' : 'white';
+
+      return (
+        <Badge 
+          className={cn("font-semibold text-white")}
+          style={{ backgroundColor: bgColor, color: textColor }}
+        >
+          {withdrawnBy}
+        </Badge>
+      )
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))

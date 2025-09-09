@@ -13,26 +13,17 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
-import type { Exam, WithdrawnBy } from "@/lib/types"
+import type { Exam } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
-import { withdrawnByOptions } from "@/lib/data"
 import { useEffect } from "react"
 
-const withdrawnByValues = withdrawnByOptions.map(opt => opt.value) as [WithdrawnBy, ...WithdrawnBy[]];
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome do paciente é obrigatório e deve ter pelo menos 2 caracteres." }),
   observations: z.string().optional(),
-  receivedDate: z.date({ required_error: "A data de recebimento é obrigatória." }),
-  withdrawnBy: z.enum(withdrawnByValues, { required_error: "O campo 'Retirado por' é obrigatório." }),
+  receivedDate: z.date().optional(),
+  withdrawnBy: z.string().optional(),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -49,6 +40,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
     defaultValues: {
       patientName: "",
       observations: "",
+      withdrawnBy: "",
     },
   })
 
@@ -65,7 +57,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         patientName: "",
         observations: "",
         receivedDate: undefined,
-        withdrawnBy: undefined,
+        withdrawnBy: "",
       });
     }
   }, [exam, form]);
@@ -119,18 +111,9 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Retirado Por</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um local/status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {withdrawnByOptions.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Input placeholder="Ex: UBS REDENTOR, Municipal..." {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

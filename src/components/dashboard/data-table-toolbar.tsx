@@ -6,8 +6,6 @@ import { PlusCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
-import { DataTableFacetedFilter } from "./data-table-faceted-filter"
-import { withdrawnByOptions } from "@/lib/data"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -31,10 +29,13 @@ export function DataTableToolbar<TData>({
           }
           className="h-9 w-[150px] lg:w-[250px]"
         />
-        <DataTableFacetedFilter
-            column={table.getColumn("withdrawnBy")}
-            title="Retirado Por"
-            options={withdrawnByOptions}
+        <Input
+          placeholder="Filtrar por destino..."
+          value={(table.getColumn("withdrawnBy")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("withdrawnBy")?.setFilterValue(event.target.value)
+          }
+          className="h-9 w-[150px] lg:w-[250px]"
         />
         {isFiltered && (
           <Button
