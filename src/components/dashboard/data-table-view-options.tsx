@@ -17,6 +17,14 @@ interface DataTableViewOptionsProps<TData> {
   table: Table<TData>
 }
 
+const columnTranslations: { [key: string]: string } = {
+  patientName: "Paciente",
+  receivedDate: "Data Recebida",
+  withdrawnBy: "Retirado Por",
+  observations: "OBS",
+};
+
+
 export function DataTableViewOptions<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
@@ -42,6 +50,7 @@ export function DataTableViewOptions<TData>({
               typeof column.accessorFn !== "undefined" && column.getCanHide()
           )
           .map((column) => {
+            const translatedId = columnTranslations[column.id] || column.id;
             return (
               <DropdownMenuCheckboxItem
                 key={column.id}
@@ -49,7 +58,7 @@ export function DataTableViewOptions<TData>({
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.id}
+                {translatedId}
               </DropdownMenuCheckboxItem>
             )
           })}
