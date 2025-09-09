@@ -29,10 +29,12 @@ export default function ConsultaPage() {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-4">
-          <div className="flex items-center gap-3">
-            <FlaskConical className="h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-bold">Laboratório Caconde</h2>
-          </div>
+           {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logoprefeitura.png"
+              alt="Logo da Prefeitura"
+              className="h-16 w-auto object-contain"
+            />
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
