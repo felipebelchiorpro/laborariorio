@@ -83,6 +83,16 @@ export default function Home() {
               <Bell className="h-5 w-5" />
               <span className="sr-only">Alternar notificações</span>
             </Button>
+            <div className="h-10 w-10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logoprefeitura.png"
+                alt="Logo da Prefeitura"
+                width={40}
+                height={40}
+                className="h-full w-full object-contain"
+              />
+            </div>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">

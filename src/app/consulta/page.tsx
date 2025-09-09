@@ -71,6 +71,16 @@ export default function ConsultaPage() {
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-semibold">Consulta Pública de Exames</h1>
           </div>
+           <div className="h-10 w-10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logoprefeitura.png"
+                alt="Logo da Prefeitura"
+                width={40}
+                height={40}
+                className="h-full w-full object-contain"
+              />
+            </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <Tabs defaultValue="sao-lucas" className="w-full">
