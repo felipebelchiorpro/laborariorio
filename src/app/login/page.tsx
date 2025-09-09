@@ -16,7 +16,7 @@ export default function LoginPage() {
               className="h-24 w-24 object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold">Laboratório Caconde</h1>
+          <h1 className="text-3xl font-bold font-poppins">Laboratório Caconde</h1>
           <p className="mt-2 text-center text-muted-foreground">
             Acesso restrito ao painel administrativo.
           </p>
