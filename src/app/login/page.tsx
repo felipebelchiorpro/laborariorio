@@ -1,6 +1,6 @@
 
 import { LoginForm } from '@/components/auth/login-form';
-import { Logo } from '@/components/auth/logo';
+import Image from 'next/image';
 
 export default function LoginPage() {
   return (
@@ -8,7 +8,13 @@ export default function LoginPage() {
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center">
           <div className="mb-4">
-            <Logo className="h-24 w-24 text-muted-foreground" />
+            <Image
+              src="/logoprefeitura.png"
+              alt="Logo da Prefeitura"
+              width={96}
+              height={96}
+              className="h-24 w-24"
+            />
           </div>
           <h1 className="text-3xl font-bold font-poppins">Laboratório Caconde</h1>
           <p className="mt-2 text-center text-muted-foreground">
