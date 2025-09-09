@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,9 +16,12 @@ import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
-import { useEffect } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { Combobox } from "../ui/combobox"
 import { withdrawnByOptions } from "@/lib/data"
+import { suggestDestination } from "@/ai/flows/suggest-destination-flow"
+import { Sparkles } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
 
 const formSchema = z.object({
@@ -37,6 +40,8 @@ interface PatientFormProps {
 }
 
 export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
+  const [isSuggesting, startSuggestionTransition] = useTransition();
+
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,6 +50,9 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
       withdrawnBy: "",
     },
   })
+  
+  const watchedPatientName = useWatch({ control: form.control, name: "patientName" });
+  const watchedObservations = useWatch({ control: form.control, name: "observations" });
 
   useEffect(() => {
     if (exam) {
@@ -63,6 +71,28 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
       });
     }
   }, [exam, form]);
+  
+  const handleSuggestDestination = () => {
+    startSuggestionTransition(async () => {
+      try {
+        const result = await suggestDestination({ 
+          patientName: watchedPatientName,
+          observations: watchedObservations
+        });
+        if (result.destination) {
+          form.setValue("withdrawnBy", result.destination, { shouldValidate: true });
+        }
+      } catch (error) {
+        console.error("Failed to get suggestion", error);
+        toast({
+          title: "Erro na Sugestão",
+          description: "Não foi possível obter uma sugestão da IA. Tente novamente.",
+          variant: "destructive"
+        })
+      }
+    });
+  };
+
 
   function handleSubmit(data: PatientFormValues) {
     const examData: Omit<Exam, 'id' | 'rowNumber'> & { id?: string } = {
@@ -112,7 +142,20 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
           name="withdrawnBy"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Retirado Por</FormLabel>
+                <div className="flex justify-between items-center">
+                    <FormLabel>Retirado Por</FormLabel>
+                    <Button 
+                        type="button" 
+                        variant="link" 
+                        size="sm" 
+                        className="p-0 h-auto text-primary"
+                        onClick={handleSuggestDestination}
+                        disabled={isSuggesting}
+                    >
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        {isSuggesting ? 'Analisando...' : 'Sugerir com IA'}
+                    </Button>
+                </div>
                <Combobox
                 options={withdrawnByOptions}
                 value={field.value ?? ''}
