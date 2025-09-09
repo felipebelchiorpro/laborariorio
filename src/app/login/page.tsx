@@ -14,6 +14,7 @@ export default function LoginPage() {
               width={100} 
               height={100}
               className="h-24 w-24 object-contain"
+              unoptimized={true}
             />
           </div>
           <h1 className="text-3xl font-bold">Laboratório Caconde</h1>
