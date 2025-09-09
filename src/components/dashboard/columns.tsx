@@ -35,7 +35,8 @@ const isColorLight = (hexcolor: string) => {
 
 
 export const getColumns = (
-  onEdit: (exam: Exam) => void
+  onEdit: (exam: Exam) => void,
+  onDelete: (exam: Exam) => void
 ): ColumnDef<Exam>[] => [
   {
     id: "select",
@@ -113,6 +114,6 @@ export const getColumns = (
   },
   {
     id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} onEdit={() => onEdit(row.original)} />,
+    cell: ({ row }) => <DataTableRowActions row={row} onEdit={() => onEdit(row.original)} onDelete={() => onDelete(row.original)} />,
   },
 ]

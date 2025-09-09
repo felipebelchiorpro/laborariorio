@@ -116,10 +116,12 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
       return [];
     }
     
+    // Filtra as linhas vazias antes de mapear
     const exams = rows
       .slice(1)
-      .map((row: any[], index: number) => mapRowToExam(row, index))
-      .filter((exam: Exam | null): exam is Exam => exam !== null);
+      .map((row: any[], index: number) => mapRowToExam(row, index + rows.slice(0, 1).length))
+      .filter((exam: Exam | null): exam is Exam => exam !== null && exam.patientName.trim() !== '');
+
     
     return exams;
 
@@ -184,4 +186,38 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
       const errorData = await response.json();
       throw new Error(`Falha ao atualizar exame: ${errorData.error.message}`);
     }
+}
+
+export async function deleteExam(spreadsheetId: string, rowNumber: number) {
+  if (!rowNumber) {
+    throw new Error("O número da linha é necessário para excluir o exame.");
+  }
+  const authClient = await getAuthClient();
+  const tokenResponse = await authClient.getAccessToken();
+  const token = tokenResponse.token;
+  if (!token) {
+    throw new Error("Falha ao obter o token de acesso.");
+  }
+  
+  // A API do Google Sheets espera um corpo de requisição para limpar a linha, 
+  // mesmo que ele esteja vazio, para limpar os valores.
+  // Para excluir a linha, teríamos que usar uma chamada mais complexa (batchUpdate).
+  // Por simplicidade, vamos apenas limpar os valores da linha.
+  const range = `A${rowNumber}:D${rowNumber}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:clear`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}), // Corpo vazio é necessário para a API de clear
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("[Sheets API Delete Error]", errorData);
+    throw new Error(`Falha ao excluir exame: ${errorData.error.message}`);
+  }
 }

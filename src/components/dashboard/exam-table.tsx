@@ -6,7 +6,7 @@ import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PatientForm } from "./patient-form";
-import { addExam, getExams, updateExam } from "@/lib/sheets";
+import { addExam, getExams, updateExam, deleteExam } from "@/lib/sheets";
 import { toast } from "@/hooks/use-toast";
 
 const SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
@@ -63,6 +63,21 @@ export default function ExamTable() {
       })
     }
   };
+
+  const handleDeleteExam = async (examToDelete: Exam) => {
+    try {
+      await deleteExam(SHEET_ID, examToDelete.rowNumber);
+      toast({ title: "Sucesso", description: "Exame excluído com sucesso." });
+      fetchExams(); // Refresh data
+    } catch (error) {
+      console.error("Failed to delete exam:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir o exame da planilha.",
+        variant: "destructive",
+      });
+    }
+  };
   
   const openFormForEdit = (exam: Exam) => {
     setEditingExam(exam);
@@ -74,7 +89,7 @@ export default function ExamTable() {
     setIsFormOpen(true);
   };
 
-  const columns = getColumns(openFormForEdit);
+  const columns = getColumns(openFormForEdit, handleDeleteExam);
 
   return (
     <>
