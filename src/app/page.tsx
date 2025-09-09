@@ -16,6 +16,7 @@ import {
   Bell,
   Search,
   MapPin,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +49,14 @@ export default function Home() {
                   <Link href="/sao-joao">
                     <MapPin />
                     Exames de São João
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Consulta Pública">
+                  <Link href="/consulta">
+                    <Eye />
+                    Consulta Pública
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
