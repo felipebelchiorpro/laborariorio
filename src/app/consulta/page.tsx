@@ -1,8 +1,7 @@
 import {
   FlaskConical,
-  LayoutDashboard,
-  MapPin,
-  Eye,
+  Map,
+  Search,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -43,7 +42,7 @@ export default function ConsultaPage() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Exames do São Lucas">
                   <Link href="/">
-                    <LayoutDashboard />
+                    <FlaskConical />
                     Exames do São Lucas
                   </Link>
                 </SidebarMenuButton>
@@ -51,7 +50,7 @@ export default function ConsultaPage() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Exames de São João">
                   <Link href="/sao-joao">
-                    <MapPin />
+                    <Map />
                     Exames de São João
                   </Link>
                 </SidebarMenuButton>
@@ -59,7 +58,7 @@ export default function ConsultaPage() {
                <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Consulta Pública" isActive>
                   <Link href="/consulta">
-                    <Eye />
+                    <Search />
                     Consulta Pública
                   </Link>
                 </SidebarMenuButton>
@@ -74,16 +73,6 @@ export default function ConsultaPage() {
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-semibold">Consulta Pública de Exames</h1>
           </div>
-           <div className="h-10 w-10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logoprefeitura.png"
-                alt="Logo da Prefeitura"
-                width={40}
-                height={40}
-                className="h-full w-full object-contain"
-              />
-            </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <Tabs defaultValue="sao-lucas" className="w-full">

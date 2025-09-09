@@ -11,12 +11,11 @@ import {
   SidebarGroup,
 } from '@/components/ui/sidebar';
 import {
-  LayoutDashboard,
   FlaskConical,
   Bell,
+  Search as SearchIcon,
+  Map,
   Search,
-  MapPin,
-  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +41,7 @@ export default function Home() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Exames do São Lucas" isActive>
                   <Link href="/">
-                    <LayoutDashboard />
+                    <FlaskConical />
                     Exames do São Lucas
                   </Link>
                 </SidebarMenuButton>
@@ -50,7 +49,7 @@ export default function Home() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Exames de São João">
                   <Link href="/sao-joao">
-                    <MapPin />
+                    <Map />
                     Exames de São João
                   </Link>
                 </SidebarMenuButton>
@@ -58,7 +57,7 @@ export default function Home() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Consulta Pública">
                   <Link href="/consulta">
-                    <Eye />
+                    <Search />
                     Consulta Pública
                   </Link>
                 </SidebarMenuButton>
@@ -75,7 +74,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <div className="relative hidden md:block">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Buscar..."
@@ -86,16 +85,6 @@ export default function Home() {
               <Bell className="h-5 w-5" />
               <span className="sr-only">Alternar notificações</span>
             </Button>
-            <div className="h-10 w-10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logoprefeitura.png"
-                alt="Logo da Prefeitura"
-                width={40}
-                height={40}
-                className="h-full w-full object-contain"
-              />
-            </div>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
