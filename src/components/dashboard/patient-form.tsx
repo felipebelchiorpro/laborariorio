@@ -12,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -21,23 +22,32 @@ import { useEffect } from "react"
 import { Combobox } from "../ui/combobox"
 import { withdrawnByOptions } from "@/lib/data"
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["application/pdf"];
+
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome do paciente é obrigatório e deve ter pelo menos 2 caracteres." }),
   observations: z.string().optional(),
   receivedDate: z.date().optional(),
   withdrawnBy: z.string().optional(),
   pdfUrl: z.string().url({ message: "Por favor, insira uma URL válida." }).optional().or(z.literal('')),
+  pdfFile: z
+    .custom<FileList>()
+    .refine((files) => files === undefined || files.length === 0 || files?.[0]?.size <= MAX_FILE_SIZE, `O tamanho máximo do arquivo é 5MB.`)
+    .refine((files) => files === undefined || files.length === 0 || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type), "Apenas arquivos .pdf são aceitos.")
+    .optional(),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
 
 interface PatientFormProps {
     exam?: Exam | null;
-    onSubmit: (data: Omit<Exam, 'id' | 'rowNumber'> & { id?: string }) => void;
+    onSubmit: (data: FormData) => void;
     onDone: () => void;
+    isSubmitting?: boolean;
 }
 
-export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
+export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFormProps) {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,19 +74,42 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         receivedDate: undefined,
         withdrawnBy: "",
         pdfUrl: "",
+        pdfFile: undefined,
       });
     }
   }, [exam, form]);
 
   function handleSubmit(data: PatientFormValues) {
-    const examData: Omit<Exam, 'id' | 'rowNumber'> & { id?: string } = {
-      ...data,
-      id: exam?.id,
-      receivedDate: data.receivedDate?.toISOString(),
-    };
-    onSubmit(examData);
-    onDone();
+    const formData = new FormData();
+    
+    // Adiciona o ID do exame se estiver editando
+    if (exam?.id) {
+        formData.append('id', exam.id);
+        formData.append('rowNumber', String(exam.rowNumber));
+    }
+    
+    formData.append('patientName', data.patientName);
+    if (data.receivedDate) {
+        formData.append('receivedDate', data.receivedDate.toISOString());
+    }
+    if (data.withdrawnBy) {
+        formData.append('withdrawnBy', data.withdrawnBy);
+    }
+    if (data.observations) {
+        formData.append('observations', data.observations);
+    }
+    // Adiciona a URL do PDF existente se não houver um novo arquivo
+    if (data.pdfUrl && (!data.pdfFile || data.pdfFile.length === 0)) {
+        formData.append('pdfUrl', data.pdfUrl);
+    }
+    if (data.pdfFile && data.pdfFile.length > 0) {
+        formData.append('pdfFile', data.pdfFile[0]);
+    }
+    
+    onSubmit(formData);
   }
+
+  const pdfFileRef = form.register("pdfFile");
 
   return (
     <Form {...form}>
@@ -88,7 +121,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
             <FormItem>
               <FormLabel>Nome do Paciente</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input placeholder="John Doe" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -105,6 +138,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
                   date={field.value}
                   setDate={field.onChange}
                   placeholder="Selecione uma data"
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <FormMessage />
@@ -124,6 +158,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
                 placeholder="Selecione ou digite um destino..."
                 searchPlaceholder="Buscar destino..."
                 notFoundMessage="Destino não encontrado."
+                className={isSubmitting ? "pointer-events-none opacity-50" : ""}
               />
               <FormMessage />
             </FormItem>
@@ -140,6 +175,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
                   placeholder="Digite observações sobre o exame..."
                   className="resize-none"
                   {...field}
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <FormMessage />
@@ -148,20 +184,39 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         />
         <FormField
           control={form.control}
+          name="pdfFile"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Anexar PDF</FormLabel>
+              <FormControl>
+                <Input type="file" accept="application/pdf" {...pdfFileRef} disabled={isSubmitting} />
+              </FormControl>
+              <FormDescription>
+                Anexe um novo PDF aqui. Se um link já existir abaixo, este arquivo o substituirá.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="pdfUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Link do PDF</FormLabel>
+              <FormLabel>Link do PDF (Existente)</FormLabel>
               <FormControl>
-                <Input placeholder="https://drive.google.com/..." {...field} />
+                <Input placeholder="https://drive.google.com/..." {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onDone}>Cancelar</Button>
-            <Button type="submit">{exam ? 'Salvar Alterações' : 'Registrar Paciente'}</Button>
+            <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>Cancelar</Button>
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (exam ? 'Salvando...' : 'Registrando...') : (exam ? 'Salvar Alterações' : 'Registrar Paciente')}
+            </Button>
         </div>
       </form>
     </Form>

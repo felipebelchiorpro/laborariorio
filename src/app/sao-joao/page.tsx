@@ -11,16 +11,13 @@ import {
   SidebarGroup,
 } from '@/components/ui/sidebar';
 import {
-  Bell,
-  Search as SearchIcon,
   Map,
   Search,
   FlaskConical,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import ExamTable from '@/components/dashboard/exam-table-sao-joao';
+import Image from 'next/image';
 
 export default function SaoJoaoPage() {
   return (
@@ -65,20 +62,6 @@ export default function SaoJoaoPage() {
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-semibold">Exames de São João</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative hidden md:block">
-              <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar..."
-                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-              />
-            </div>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Alternar notificações</span>
-            </Button>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">

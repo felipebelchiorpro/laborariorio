@@ -12,22 +12,19 @@ import {
 } from '@/components/ui/sidebar';
 import {
   FlaskConical,
-  Bell,
-  Search as SearchIcon,
   Map,
   Search,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import ExamTable from '@/components/dashboard/exam-table';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="flex-row items-center gap-2 p-4">
-             <span className="font-poppins text-lg font-semibold">Laboratório Caconde</span>
+            <span className="font-poppins text-lg font-semibold">Laboratório Caconde</span>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -65,20 +62,6 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-semibold">Exames do São Lucas</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative hidden md:block">
-              <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar..."
-                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-              />
-            </div>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Alternar notificações</span>
-            </Button>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">

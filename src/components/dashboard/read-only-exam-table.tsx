@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { Exam } from "@/lib/types";
-import { getExams } from "@/lib/sheets";
+import { getExams } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
 import { readOnlyColumns } from "./read-only-columns";
 import {

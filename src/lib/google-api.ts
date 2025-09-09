@@ -1,11 +1,14 @@
-
 'use server';
 import { google } from 'googleapis';
 import type { Exam } from './types';
 import { parse, isValid, getYear, format } from 'date-fns';
+import { Readable } from 'stream';
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const RANGE = 'A:E'; 
+const SCOPES = [
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive.file'
+];
+const SHEETS_RANGE = 'A:E'; 
 
 async function getAuthClient() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
@@ -30,6 +33,8 @@ async function getAuthClient() {
     throw new Error("As credenciais fornecidas em GOOGLE_CREDENTIALS_BASE64 não são válidas.");
   }
 }
+
+// --- Google Sheets Functions ---
 
 function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2; 
@@ -96,7 +101,7 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: RANGE,
+      range: SHEETS_RANGE,
     });
 
     const rows = response.data.values;
@@ -126,7 +131,7 @@ export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'ro
     try {
         await sheets.spreadsheets.values.append({
             spreadsheetId,
-            range: RANGE,
+            range: SHEETS_RANGE,
             valueInputOption: 'USER_ENTERED',
             requestBody: { values },
         });
@@ -171,4 +176,58 @@ export async function deleteExam(spreadsheetId: string, rowNumber: number) {
       console.error("[Sheets API Delete Error]", error);
       throw new Error(`Falha ao excluir exame: ${error.message}`);
   }
+}
+
+// --- Google Drive Functions ---
+
+async function getDriveApi() {
+    const auth = await getAuthClient();
+    return google.drive({ version: 'v3', auth });
+}
+
+export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Promise<string> {
+    const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    if (!driveFolderId) {
+        throw new Error("A variável de ambiente GOOGLE_DRIVE_FOLDER_ID não está definida.");
+    }
+
+    const drive = await getDriveApi();
+
+    try {
+        const file = await drive.files.create({
+            requestBody: {
+                name: fileName,
+                parents: [driveFolderId],
+                mimeType: 'application/pdf',
+            },
+            media: {
+                mimeType: 'application/pdf',
+                body: Readable.from(fileBuffer),
+            },
+            fields: 'id, webViewLink',
+        });
+
+        const fileId = file.data.id;
+        if (!fileId) {
+            throw new Error("Falha ao obter o ID do arquivo após o upload.");
+        }
+
+        // Tornar o arquivo publicamente legível
+        await drive.permissions.create({
+            fileId: fileId,
+            requestBody: {
+                role: 'reader',
+                type: 'anyone',
+            },
+        });
+
+        if (!file.data.webViewLink) {
+             throw new Error("Falha ao obter o link de visualização do arquivo.");
+        }
+
+        return file.data.webViewLink;
+    } catch (error: any) {
+        console.error("[Drive API Error] Falha ao fazer upload do arquivo:", error);
+        throw new Error(`Falha ao fazer upload do PDF para o Drive: ${error.message}`);
+    }
 }

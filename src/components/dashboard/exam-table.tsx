@@ -6,7 +6,7 @@ import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PatientForm } from "./patient-form";
-import { addExam, getExams, updateExam, deleteExam } from "@/lib/sheets";
+import { addExam, getExams, updateExam, deleteExam, uploadPdfToDrive } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
 
 const SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
@@ -14,6 +14,7 @@ const SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
 export default function ExamTable() {
   const [exams, setExams] = React.useState<Exam[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingExam, setEditingExam] = React.useState<Exam | null>(null);
 
@@ -38,29 +39,49 @@ export default function ExamTable() {
     fetchExams();
   }, [fetchExams]);
 
-  const handleAddOrUpdateExam = async (examData: Omit<Exam, 'id' | 'rowNumber'> & { id?: string }) => {
+  const handleAddOrUpdateExam = async (formData: FormData) => {
+    setIsSubmitting(true);
     try {
-      if (editingExam?.id) {
-        // Update existing exam
-        const updatedExam = { ...editingExam, ...examData };
-        await updateExam(SHEET_ID, updatedExam);
-        toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
-      } else {
-        // Add new exam
-        const newExam: Omit<Exam, 'id' | 'rowNumber'> = {
-          ...examData,
+        const pdfFile = formData.get('pdfFile') as File | null;
+        let pdfUrl = formData.get('pdfUrl') as string | null;
+
+        if (pdfFile && pdfFile.size > 0) {
+            const fileBuffer = Buffer.from(await pdfFile.arrayBuffer());
+            pdfUrl = await uploadPdfToDrive(fileBuffer, pdfFile.name);
+        }
+
+        const examData = {
+          patientName: formData.get('patientName') as string,
+          receivedDate: formData.get('receivedDate') as string | undefined,
+          withdrawnBy: formData.get('withdrawnBy') as string | undefined,
+          observations: formData.get('observations') as string | undefined,
+          pdfUrl: pdfUrl || undefined,
         };
-        await addExam(SHEET_ID, newExam);
-        toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
-      }
-      fetchExams(); // Refresh data
+
+        const id = formData.get('id') as string | null;
+        if (id) {
+            // Update
+            const rowNumber = parseInt(formData.get('rowNumber') as string, 10);
+            const updatedExam: Exam = { ...examData, id, rowNumber };
+            await updateExam(SHEET_ID, updatedExam);
+            toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
+        } else {
+            // Add new
+            await addExam(SHEET_ID, examData);
+            toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
+        }
+        
+        setIsFormOpen(false);
+        fetchExams();
     } catch (error) {
        console.error("Failed to save exam:", error);
        toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar o exame na planilha.",
+        description: "Não foi possível salvar o exame. Verifique os dados e a conexão.",
         variant: "destructive"
       })
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -98,7 +119,7 @@ export default function ExamTable() {
         data={exams} 
         onAddPatient={openFormForAdd}
       />
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={(isOpen) => !isSubmitting && setIsFormOpen(isOpen)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{editingExam ? 'Editar Detalhes do Exame' : 'Registrar Novo Paciente'}</DialogTitle>
@@ -106,7 +127,8 @@ export default function ExamTable() {
           <PatientForm 
             exam={editingExam}
             onSubmit={handleAddOrUpdateExam} 
-            onDone={() => setIsFormOpen(false)} 
+            onDone={() => setIsFormOpen(false)}
+            isSubmitting={isSubmitting} 
           />
         </DialogContent>
       </Dialog>
