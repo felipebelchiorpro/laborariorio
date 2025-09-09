@@ -27,7 +27,7 @@ export default function Home() {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="flex items-center gap-2 p-4">
+        <SidebarHeader className="flex-row items-center gap-2 p-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logoprefeitura.png"
