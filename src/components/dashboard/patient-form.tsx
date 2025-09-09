@@ -17,6 +17,8 @@ import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
 import { useEffect } from "react"
+import { Combobox } from "../ui/combobox"
+import { withdrawnByOptions } from "@/lib/data"
 
 
 const formSchema = z.object({
@@ -109,11 +111,16 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
           control={form.control}
           name="withdrawnBy"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Retirado Por</FormLabel>
-              <FormControl>
-                <Input placeholder="Ex: UBS REDENTOR, Municipal..." {...field} />
-              </FormControl>
+               <Combobox
+                options={withdrawnByOptions}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder="Selecione ou digite um destino..."
+                searchPlaceholder="Buscar destino..."
+                notFoundMessage="Destino não encontrado."
+              />
               <FormMessage />
             </FormItem>
           )}

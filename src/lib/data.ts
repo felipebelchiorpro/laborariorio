@@ -1,6 +1,5 @@
-import type { WithdrawnBy } from './types';
 
-export const withdrawnByOptions: { value: WithdrawnBy; label: string }[] = [
+export const withdrawnByOptions: { value: string; label: string }[] = [
     { value: "Municipal", label: "Municipal" },
     { value: "UBS REDENTOR", label: "UBS REDENTOR" },
     { value: "RETIRADO", label: "RETIRADO" },
