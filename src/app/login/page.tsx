@@ -1,13 +1,19 @@
 
 import { LoginForm } from '@/components/auth/login-form';
-import { Landmark } from 'lucide-react';
+import Image from 'next/image';
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center">
-          <Landmark className="mb-4 h-12 w-12 text-primary" />
+          <Image
+            src="/logo-prefeitura.png"
+            alt="Logo da Prefeitura"
+            width={100}
+            height={100}
+            className="mb-4"
+          />
           <h1 className="text-3xl font-bold">Laboratório Caconde</h1>
           <p className="mt-2 text-center text-muted-foreground">
             Acesso restrito ao painel administrativo.
