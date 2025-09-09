@@ -28,12 +28,6 @@ export default function ConsultaPage() {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="flex-row items-center gap-2 p-4">
-           {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logoprefeitura.png"
-              alt="Logo da Prefeitura"
-              className="h-12 w-auto object-contain"
-            />
             <span className="font-poppins text-lg font-semibold">Laboratório Caconde</span>
         </SidebarHeader>
         <SidebarContent>
