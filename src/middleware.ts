@@ -52,8 +52,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public files (e.g. /logo-prefeitura.png) by using a negative lookahead
+     * - any file with an extension (e.g. .png, .jpg, etc.)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 };
