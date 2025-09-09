@@ -27,13 +27,14 @@ export default function SaoJoaoPage() {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="p-4">
+        <SidebarHeader className="flex items-center gap-2 p-4">
            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logoprefeitura.png"
               alt="Logo da Prefeitura"
-              className="h-16 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
+            <span className="font-poppins text-lg font-semibold">Laboratório Caconde</span>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
