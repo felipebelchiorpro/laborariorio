@@ -14,6 +14,7 @@ export default function LoginPage() {
               width={96}
               height={96}
               className="h-24 w-24"
+              unoptimized // Adicionado para ajudar a carregar a imagem local
             />
           </div>
           <h1 className="text-3xl font-bold font-poppins">Laboratório Caconde</h1>
