@@ -5,25 +5,42 @@ import { cookies } from "next/headers";
 
 const SESSION_COOKIE_NAME = "lab_session";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const UBS_PASSWORD = process.env.UBS_PASSWORD;
 
-export async function login(password: string): Promise<boolean> {
-  if (!ADMIN_PASSWORD) {
-    console.error("A variável de ambiente ADMIN_PASSWORD não está definida.");
-    return false;
+type LoginResult = {
+    success: boolean;
+    role: 'admin' | 'ubs' | null;
+}
+
+export async function login(password: string): Promise<LoginResult> {
+  if (!ADMIN_PASSWORD || !UBS_PASSWORD) {
+    console.error("As variáveis de ambiente ADMIN_PASSWORD e/ou UBS_PASSWORD não estão definidas.");
+    return { success: false, role: null };
   }
 
+  const cookieStore = cookies();
+  
   if (password === ADMIN_PASSWORD) {
-    const cookieStore = cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, "true", {
+    cookieStore.set(SESSION_COOKIE_NAME, "admin", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7, // 1 semana
       path: "/",
     });
-    return true;
+    return { success: true, role: 'admin' };
+  }
+  
+  if (password === UBS_PASSWORD) {
+    cookieStore.set(SESSION_COOKIE_NAME, "ubs", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 semana
+      path: "/",
+    });
+    return { success: true, role: 'ubs' };
   }
 
-  return false;
+  return { success: false, role: null };
 }
 
 export async function logout() {
@@ -31,8 +48,11 @@ export async function logout() {
   cookieStore.delete(SESSION_COOKIE_NAME);
 }
 
-export async function isAuthenticated(): Promise<boolean> {
+export async function getSessionRole(): Promise<'admin' | 'ubs' | null> {
   const cookieStore = cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME);
-  return session?.value === "true";
+  if (session?.value === 'admin' || session?.value === 'ubs') {
+    return session.value;
+  }
+  return null;
 }

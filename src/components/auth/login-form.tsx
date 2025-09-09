@@ -42,9 +42,13 @@ export function LoginForm() {
   const onSubmit = (values: LoginFormValues) => {
     setError(null);
     startTransition(async () => {
-      const success = await login(values.password);
-      if (success) {
-        router.push("/");
+      const result = await login(values.password);
+      if (result.success) {
+        if (result.role === 'admin') {
+            router.push("/");
+        } else if (result.role === 'ubs') {
+            router.push("/consulta");
+        }
         router.refresh();
       } else {
         setError("A senha fornecida está incorreta.");
