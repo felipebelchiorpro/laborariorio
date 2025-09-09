@@ -1,13 +1,13 @@
 
 import { LoginForm } from '@/components/auth/login-form';
-import { FlaskConical } from 'lucide-react';
+import { Landmark } from 'lucide-react';
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center">
-          <FlaskConical className="mb-4 h-12 w-12 text-primary" />
+          <Landmark className="mb-4 h-12 w-12 text-primary" />
           <h1 className="text-3xl font-bold">Laboratório Caconde</h1>
           <p className="mt-2 text-center text-muted-foreground">
             Acesso restrito ao painel administrativo.
