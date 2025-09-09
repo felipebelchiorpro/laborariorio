@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -25,6 +26,7 @@ const formSchema = z.object({
   observations: z.string().optional(),
   receivedDate: z.date().optional(),
   withdrawnBy: z.string().optional(),
+  pdfUrl: z.string().url({ message: "Por favor, insira uma URL válida." }).optional().or(z.literal('')),
 })
 
 type PatientFormValues = z.infer<typeof formSchema>
@@ -42,6 +44,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
       patientName: "",
       observations: "",
       withdrawnBy: "",
+      pdfUrl: "",
     },
   })
 
@@ -52,6 +55,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         observations: exam.observations,
         receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
         withdrawnBy: exam.withdrawnBy,
+        pdfUrl: exam.pdfUrl,
       });
     } else {
       form.reset({
@@ -59,6 +63,7 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
         observations: "",
         receivedDate: undefined,
         withdrawnBy: "",
+        pdfUrl: "",
       });
     }
   }, [exam, form]);
@@ -136,6 +141,19 @@ export function PatientForm({ exam, onSubmit, onDone }: PatientFormProps) {
                   className="resize-none"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="pdfUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Link do PDF</FormLabel>
+              <FormControl>
+                <Input placeholder="https://drive.google.com/..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

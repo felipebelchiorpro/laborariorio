@@ -1,3 +1,4 @@
+
 "use client"
 
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu"
@@ -22,6 +23,7 @@ const columnTranslations: { [key: string]: string } = {
   receivedDate: "Data Recebida",
   withdrawnBy: "Retirado Por",
   observations: "OBS",
+  pdfUrl: "PDF"
 };
 
 

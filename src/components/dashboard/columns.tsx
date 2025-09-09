@@ -1,9 +1,10 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, FileText } from "lucide-react";
 import type { Exam } from "@/lib/types"
 import { DataTableRowActions } from "./data-table-row-actions";
 import { format } from "date-fns";
@@ -111,6 +112,25 @@ export const getColumns = (
   {
     accessorKey: "observations",
     header: "OBS",
+  },
+  {
+    accessorKey: "pdfUrl",
+    header: "PDF",
+    cell: ({ row }) => {
+      const { pdfUrl } = row.original;
+      if (!pdfUrl) return null;
+      return (
+        <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => window.open(pdfUrl, '_blank')}
+            aria-label="Abrir PDF"
+        >
+            <FileText className="h-4 w-4 text-primary" />
+        </Button>
+      )
+    },
+    enableSorting: false,
   },
   {
     id: "actions",

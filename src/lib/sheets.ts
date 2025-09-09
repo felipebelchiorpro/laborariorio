@@ -5,7 +5,7 @@ import type { Exam } from './types';
 import { parse, isValid, getYear, format } from 'date-fns';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const RANGE = 'A:D'; 
+const RANGE = 'A:E'; 
 
 async function getAuthClient() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
@@ -33,7 +33,7 @@ async function getAuthClient() {
 
 function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2; 
-  const [patientName, receivedDateStr, withdrawnBy, observations] = row;
+  const [patientName, receivedDateStr, withdrawnBy, observations, pdfUrl] = row;
 
   if (!patientName || String(patientName).trim() === '') {
     return null;
@@ -67,6 +67,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     receivedDate,
     withdrawnBy: withdrawnBy || undefined,
     observations: observations || '',
+    pdfUrl: pdfUrl || undefined,
   };
 }
 
@@ -77,6 +78,7 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
     displayDate,
     exam.withdrawnBy || '',
     exam.observations || '',
+    exam.pdfUrl || '',
   ];
 }
 
@@ -168,7 +170,7 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
      if (!token) {
         throw new Error("Falha ao obter o token de acesso.");
     }
-    const range = `A${exam.rowNumber}:D${exam.rowNumber}`;
+    const range = `A${exam.rowNumber}:E${exam.rowNumber}`;
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`;
 
     const values = [mapExamToRow(exam)];
@@ -203,7 +205,7 @@ export async function deleteExam(spreadsheetId: string, rowNumber: number) {
   // mesmo que ele esteja vazio, para limpar os valores.
   // Para excluir a linha, teríamos que usar uma chamada mais complexa (batchUpdate).
   // Por simplicidade, vamos apenas limpar os valores da linha.
-  const range = `A${rowNumber}:D${rowNumber}`;
+  const range = `A${rowNumber}:E${rowNumber}`;
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:clear`;
 
   const response = await fetch(url, {
