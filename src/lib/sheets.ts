@@ -1,6 +1,6 @@
 
 'use server';
-import { GoogleAuth } from 'google-auth-library';
+import { google } from 'googleapis';
 import type { Exam } from './types';
 import { parse, isValid, getYear, format } from 'date-fns';
 
@@ -19,9 +19,9 @@ async function getAuthClient() {
     const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
     const credentials = JSON.parse(credentialsStr.trim());
 
-    const auth = new GoogleAuth({
-      credentials,
-      scopes: SCOPES,
+    const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: SCOPES,
     });
 
     return auth.getClient();
@@ -82,48 +82,33 @@ function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
   ];
 }
 
+async function getSheetsApi() {
+    const auth = await getAuthClient();
+    return google.sheets({ version: 'v4', auth });
+}
 
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   if (!spreadsheetId) {
     return [];
   }
   try {
-    const authClient = await getAuthClient();
-    const tokenResponse = await authClient.getAccessToken();
-    const token = tokenResponse.token;
-
-    if (!token) {
-        throw new Error("Falha ao obter o token de acesso.");
-    }
-
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${RANGE}`;
-
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      cache: 'no-store', 
+    const sheets = await getSheetsApi();
+    
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: RANGE,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("[Sheets API Fetch Error] A API retornou um erro:", errorData);
-      throw new Error(`Falha na chamada da API do Sheets: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const rows = data.values;
+    const rows = response.data.values;
     
     if (!rows || rows.length <= 1) { 
       return [];
     }
     
-    // Filtra as linhas vazias antes de mapear
     const exams = rows
       .slice(1)
-      .map((row: any[], index: number) => mapRowToExam(row, index + rows.slice(0, 1).length))
+      .map((row: any[], index: number) => mapRowToExam(row, index + 1))
       .filter((exam: Exam | null): exam is Exam => exam !== null && exam.patientName.trim() !== '');
-
     
     return exams;
 
@@ -135,28 +120,18 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 }
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
-    const authClient = await getAuthClient();
-    const tokenResponse = await authClient.getAccessToken();
-    const token = tokenResponse.token;
-     if (!token) {
-        throw new Error("Falha ao obter o token de acesso.");
-    }
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${RANGE}:append?valueInputOption=USER_ENTERED`;
-    
+    const sheets = await getSheetsApi();
     const values = [mapExamToRow(exam)];
-    
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ values }),
-    });
 
-     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Falha ao adicionar exame: ${errorData.error.message}`);
+    try {
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: RANGE,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values },
+        });
+    } catch (error: any) {
+        throw new Error(`Falha ao adicionar exame: ${error.message}`);
     }
 }
 
@@ -164,29 +139,19 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
     if (!exam.rowNumber) {
         throw new Error("O número da linha é necessário para atualizar o exame.");
     }
-    const authClient = await getAuthClient();
-    const tokenResponse = await authClient.getAccessToken();
-    const token = tokenResponse.token;
-     if (!token) {
-        throw new Error("Falha ao obter o token de acesso.");
-    }
+    const sheets = await getSheetsApi();
     const range = `A${exam.rowNumber}:E${exam.rowNumber}`;
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`;
-
     const values = [mapExamToRow(exam)];
 
-    const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ values }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Falha ao atualizar exame: ${errorData.error.message}`);
+    try {
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values },
+        });
+    } catch (error: any) {
+        throw new Error(`Falha ao atualizar exame: ${error.message}`);
     }
 }
 
@@ -194,32 +159,16 @@ export async function deleteExam(spreadsheetId: string, rowNumber: number) {
   if (!rowNumber) {
     throw new Error("O número da linha é necessário para excluir o exame.");
   }
-  const authClient = await getAuthClient();
-  const tokenResponse = await authClient.getAccessToken();
-  const token = tokenResponse.token;
-  if (!token) {
-    throw new Error("Falha ao obter o token de acesso.");
-  }
-  
-  // A API do Google Sheets espera um corpo de requisição para limpar a linha, 
-  // mesmo que ele esteja vazio, para limpar os valores.
-  // Para excluir a linha, teríamos que usar uma chamada mais complexa (batchUpdate).
-  // Por simplicidade, vamos apenas limpar os valores da linha.
+  const sheets = await getSheetsApi();
   const range = `A${rowNumber}:E${rowNumber}`;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}:clear`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({}), // Corpo vazio é necessário para a API de clear
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error("[Sheets API Delete Error]", errorData);
-    throw new Error(`Falha ao excluir exame: ${errorData.error.message}`);
+  try {
+      await sheets.spreadsheets.values.clear({
+        spreadsheetId,
+        range,
+      });
+  } catch (error: any) {
+      console.error("[Sheets API Delete Error]", error);
+      throw new Error(`Falha ao excluir exame: ${error.message}`);
   }
 }
