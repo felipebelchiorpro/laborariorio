@@ -2,31 +2,31 @@
 'use server';
 import { GoogleAuth } from 'google-auth-library';
 import type { Exam } from './types';
-import { parse, isValid, getYear } from 'date-fns';
+import { parse, isValid, getYear, format } from 'date-fns';
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const RANGE = 'A:D'; 
 
-async function getAuthToken() {
+async function getAuthClient() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
 
   if (!base64Credentials) {
+    console.error("[AUTH ERROR] A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não foi encontrada.");
     throw new Error('A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não foi encontrada.');
   }
 
   try {
     const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-    const credentials = JSON.parse(credentialsStr);
+    const credentials = JSON.parse(credentialsStr.trim());
 
     const auth = new GoogleAuth({
       credentials,
       scopes: SCOPES,
     });
 
-    const authToken = await auth.getAccessToken();
-    return authToken;
+    return auth.getClient();
   } catch (error: any) {
-    console.error("[AUTH ERROR] Falha ao processar as credenciais ou obter o token:", error.message);
+    console.error("[AUTH ERROR] Falha ao decodificar ou processar as credenciais Base64:", error.message);
     throw new Error("As credenciais fornecidas em GOOGLE_CREDENTIALS_BASE64 não são válidas.");
   }
 }
@@ -71,7 +71,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
 }
 
 function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
-  const displayDate = exam.receivedDate ? new Date(exam.receivedDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+  const displayDate = exam.receivedDate ? format(new Date(exam.receivedDate), 'dd/MM/yyyy') : '';
   return [
     exam.patientName || '',
     displayDate,
@@ -86,7 +86,14 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
     return [];
   }
   try {
-    const token = await getAuthToken();
+    const authClient = await getAuthClient();
+    const tokenResponse = await authClient.getAccessToken();
+    const token = tokenResponse.token;
+
+    if (!token) {
+        throw new Error("Falha ao obter o token de acesso.");
+    }
+
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${RANGE}`;
 
     const response = await fetch(url, {
@@ -124,7 +131,12 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 }
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
-    const token = await getAuthToken();
+    const authClient = await getAuthClient();
+    const tokenResponse = await authClient.getAccessToken();
+    const token = tokenResponse.token;
+     if (!token) {
+        throw new Error("Falha ao obter o token de acesso.");
+    }
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${RANGE}:append?valueInputOption=USER_ENTERED`;
     
     const values = [mapExamToRow(exam)];
@@ -148,7 +160,12 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
     if (!exam.rowNumber) {
         throw new Error("O número da linha é necessário para atualizar o exame.");
     }
-    const token = await getAuthToken();
+    const authClient = await getAuthClient();
+    const tokenResponse = await authClient.getAccessToken();
+    const token = tokenResponse.token;
+     if (!token) {
+        throw new Error("Falha ao obter o token de acesso.");
+    }
     const range = `A${exam.rowNumber}:D${exam.rowNumber}`;
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`;
 
