@@ -23,10 +23,9 @@ export async function uploadPdfToCloudinary(base64Data: string, fileName: string
     const dataUri = `data:application/pdf;base64,${base64Data}`;
 
     const result = await cloudinary.uploader.upload(dataUri, {
-      resource_type: 'raw', // Use 'raw' for non-image files like PDFs
+      resource_type: 'image', // Use 'image' as PDFs are treated like images for viewing
       public_id: fileName, // Use original file name as public ID
       access_mode: 'public', // Make the file publicly accessible
-      format: 'pdf', // <<< ADICIONADO: Garante que o arquivo seja tratado como PDF
       overwrite: true, // Overwrite if a file with the same name exists
     });
 
@@ -34,7 +33,10 @@ export async function uploadPdfToCloudinary(base64Data: string, fileName: string
         throw new Error("O upload para o Cloudinary não retornou uma URL segura.");
     }
 
-    return { url: result.secure_url, name: fileName };
+    // Append .pdf to the URL if Cloudinary didn't add it, to help browsers.
+    const finalUrl = result.secure_url.endsWith('.pdf') ? result.secure_url : `${result.secure_url}.pdf`;
+
+    return { url: finalUrl, name: fileName };
   } catch (error: any) {
     console.error("[Cloudinary Error] Falha ao fazer upload do arquivo:", error);
     // Provide a more user-friendly error message
