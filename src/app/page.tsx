@@ -1,3 +1,6 @@
+
+'use client';
+
 import {
   SidebarProvider,
   Sidebar,
@@ -14,12 +17,22 @@ import {
   FlaskConical,
   Map,
   Search,
+  LogOut,
 } from 'lucide-react';
 import ExamTable from '@/components/dashboard/exam-table';
 import Link from 'next/link';
-import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { signOutUser } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOutUser();
+    router.push('/login');
+  };
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -63,6 +76,10 @@ export default function Home() {
             <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-semibold">Exames do São Lucas</h1>
           </div>
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sair
+          </Button>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="mt-4">

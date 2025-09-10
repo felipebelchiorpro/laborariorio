@@ -12,7 +12,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold font-poppins">Laboratório Caconde</h1>
           <p className="mt-2 text-center text-muted-foreground">
-            Acesso restrito ao painel administrativo.
+            Use seu email e senha para acessar o painel.
           </p>
         </div>
         <LoginForm />

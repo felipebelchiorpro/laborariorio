@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +19,10 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
-import { login } from "@/lib/auth";
-import { useRouter } from "next/navigation";
+import { signIn } from "@/lib/auth";
 
 const formSchema = z.object({
+  email: z.string().email({ message: "Por favor, insira um email válido." }),
   password: z.string().min(1, { message: "A senha é obrigatória." }),
 });
 
@@ -35,6 +36,7 @@ export function LoginForm() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      email: "",
       password: "",
     },
   });
@@ -42,13 +44,11 @@ export function LoginForm() {
   const onSubmit = (values: LoginFormValues) => {
     setError(null);
     startTransition(async () => {
-      const result = await login(values.password);
+      const result = await signIn(values.email, values.password);
       if (result.success) {
-        // A lógica de redirecionamento agora é tratada pelo middleware.
-        // Apenas atualizamos a página para que o middleware possa fazer seu trabalho.
-        router.refresh();
+        router.push("/"); // Redireciona para a página principal após o login
       } else {
-        setError("A senha fornecida está incorreta.");
+        setError(result.error || "Ocorreu um erro desconhecido.");
         form.reset();
       }
     });
@@ -67,10 +67,28 @@ export function LoginForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="seuemail@exemplo.com"
+                    disabled={isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Senha de Acesso</FormLabel>
+                <FormLabel>Senha</FormLabel>
                 <FormControl>
                   <Input
                     {...field}

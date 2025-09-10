@@ -1,63 +1,53 @@
 
-"use server";
+"use client";
 
-import { cookies } from "next/headers";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  signOut,
+  type AuthError
+} from "firebase/auth";
+import { app } from "./firebase";
 
-const SESSION_COOKIE_NAME = "lab_session";
-
-type LoginResult = {
+type SignInResult = {
     success: boolean;
-    role: 'admin' | 'ubs' | null;
+    error?: string;
 }
 
-export async function login(password: string): Promise<LoginResult> {
-  // Lendo as variáveis de ambiente DENTRO da função para garantir que sejam carregadas a cada chamada.
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-  const UBS_PASSWORD = process.env.UBS_PASSWORD;
+const auth = getAuth(app);
 
-  // Verificação explícita para garantir que as senhas foram carregadas do .env
-  if (!ADMIN_PASSWORD || !UBS_PASSWORD) {
-    console.error("ERRO CRÍTICO: As variáveis de ambiente ADMIN_PASSWORD e/ou UBS_PASSWORD não foram carregadas. Verifique o arquivo .env na raiz do projeto.");
-    // Retorna um erro genérico para o usuário por segurança
-    return { success: false, role: null };
-  }
-
-  const cookieStore = cookies();
-  
-  // Compara a senha fornecida com as senhas carregadas do ambiente
-  if (password === ADMIN_PASSWORD) {
-    cookieStore.set(SESSION_COOKIE_NAME, "admin", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 1 semana
-      path: "/",
-    });
-    return { success: true, role: 'admin' };
-  }
-  
-  if (password === UBS_PASSWORD) {
-    cookieStore.set(SESSION_COOKIE_NAME, "ubs", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 1 semana
-      path: "/",
-    });
-    return { success: true, role: 'ubs' };
-  }
-
-  return { success: false, role: null };
+// Mapeia códigos de erro do Firebase para mensagens amigáveis
+const getFriendlyErrorMessage = (errorCode: string): string => {
+    switch (errorCode) {
+        case 'auth/invalid-email':
+            return 'O formato do email fornecido não é válido.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+            return 'Email ou senha incorretos. Por favor, verifique suas credenciais.';
+        case 'auth/too-many-requests':
+            return 'Acesso bloqueado temporariamente devido a muitas tentativas de login. Tente novamente mais tarde.';
+        default:
+            return 'Ocorreu um erro inesperado durante o login.';
+    }
 }
 
-export async function logout() {
-  const cookieStore = cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+export async function signIn(email: string, password: string): Promise<SignInResult> {
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        return { success: true };
+    } catch (error) {
+        const authError = error as AuthError;
+        console.error("Firebase Auth Error:", authError.code, authError.message);
+        const friendlyMessage = getFriendlyErrorMessage(authError.code);
+        return { success: false, error: friendlyMessage };
+    }
 }
 
-export async function getSessionRole(): Promise<'admin' | 'ubs' | null> {
-  const cookieStore = cookies();
-  const session = cookieStore.get(SESSION_COOKIE_NAME);
-  if (session?.value === 'admin' || session?.value === 'ubs') {
-    return session.value;
-  }
-  return null;
+export async function signOutUser(): Promise<void> {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error("Erro ao fazer logout:", error);
+    }
 }
