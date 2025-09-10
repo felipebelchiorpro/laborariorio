@@ -4,12 +4,18 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, FileText } from "lucide-react";
+import { ArrowUpDown, FileDown, FileText } from "lucide-react";
 import type { Exam } from "@/lib/types"
 import { DataTableRowActions } from "./data-table-row-actions";
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, normalizeText } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // Função para gerar uma cor com base no hash do texto
 const stringToColor = (str: string) => {
@@ -76,7 +82,12 @@ export const getColumns = (
     },
     cell: ({ row }) => {
       return <div className="font-medium">{row.original.patientName}</div>
-    }
+    },
+    filterFn: (row, id, value) => {
+      const normalizedRowValue = normalizeText(row.getValue(id));
+      const normalizedFilterValue = normalizeText(value);
+      return normalizedRowValue.includes(normalizedFilterValue);
+    },
   },
   {
     accessorKey: "receivedDate",
@@ -106,7 +117,9 @@ export const getColumns = (
       )
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      const normalizedRowValue = normalizeText(row.getValue(id));
+      const normalizedFilterValue = normalizeText(value);
+      return normalizedRowValue.includes(normalizedFilterValue);
     },
   },
   {
@@ -114,20 +127,44 @@ export const getColumns = (
     header: "OBS",
   },
   {
-    accessorKey: "pdfUrl",
-    header: "PDF",
+    accessorKey: "pdfLinks",
+    header: "PDFs",
     cell: ({ row }) => {
-      const { pdfUrl } = row.original;
-      if (!pdfUrl) return null;
-      return (
-        <Button 
+      const { pdfLinks } = row.original;
+      if (!pdfLinks || pdfLinks.length === 0) return null;
+
+      if (pdfLinks.length === 1) {
+        return (
+          <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => window.open(pdfUrl, '_blank')}
+            onClick={() => window.open(pdfLinks[0].url, '_blank')}
             aria-label="Abrir PDF"
-        >
-            <FileText className="h-4 w-4 text-primary" />
-        </Button>
+          >
+              <FileText className="h-4 w-4 text-primary" />
+          </Button>
+        )
+      }
+      
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Abrir PDFs">
+               <FileDown className="h-4 w-4 text-primary" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {pdfLinks.map((pdf, index) => (
+              <DropdownMenuItem 
+                key={index}
+                onSelect={() => window.open(pdf.url, '_blank')}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                <span>{pdf.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )
     },
     enableSorting: false,

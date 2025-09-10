@@ -1,6 +1,6 @@
 'use server';
 import { google } from 'googleapis';
-import type { Exam } from './types';
+import type { Exam, PdfLink } from './types';
 import { parse, isValid, getYear, format } from 'date-fns';
 import { Readable } from 'stream';
 
@@ -38,7 +38,7 @@ async function getAuthClient() {
 
 function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2; 
-  const [patientName, receivedDateStr, withdrawnBy, observations, pdfUrl] = row;
+  const [patientName, receivedDateStr, withdrawnBy, observations, pdfData] = row;
 
   if (!patientName || String(patientName).trim() === '') {
     return null;
@@ -65,6 +65,19 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     }
   }
 
+  let pdfLinks: PdfLink[] | undefined;
+  if (pdfData) {
+    try {
+      pdfLinks = JSON.parse(pdfData);
+    } catch (e) {
+      // Handle legacy single URL format
+      if (typeof pdfData === 'string' && pdfData.startsWith('http')) {
+        pdfLinks = [{ url: pdfData, name: 'Resultado.pdf' }];
+      }
+    }
+  }
+
+
   return {
     id: `ROW${rowNumber}`,
     rowNumber,
@@ -72,18 +85,20 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     receivedDate,
     withdrawnBy: withdrawnBy || undefined,
     observations: observations || '',
-    pdfUrl: pdfUrl || undefined,
+    pdfLinks,
   };
 }
 
-function mapExamToRow(exam: Omit<Exam, 'id' | 'rowNumber'>): any[] {
+function mapExamToRow(exam: Partial<Omit<Exam, 'id' | 'rowNumber'>>): any[] {
   const displayDate = exam.receivedDate ? format(new Date(exam.receivedDate), 'dd/MM/yyyy') : '';
+  const pdfData = exam.pdfLinks && exam.pdfLinks.length > 0 ? JSON.stringify(exam.pdfLinks) : '';
+  
   return [
     exam.patientName || '',
     displayDate,
     exam.withdrawnBy || '',
     exam.observations || '',
-    exam.pdfUrl || '',
+    pdfData,
   ];
 }
 
@@ -209,7 +224,7 @@ async function getDriveApi() {
     return google.drive({ version: 'v3', auth });
 }
 
-export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Promise<string> {
+export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Promise<PdfLink> {
     const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
     if (!driveFolderId) {
         throw new Error("A variável de ambiente GOOGLE_DRIVE_FOLDER_ID não está definida.");
@@ -249,7 +264,7 @@ export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Pr
              throw new Error("Falha ao obter o link de visualização do arquivo.");
         }
 
-        return file.data.webViewLink;
+        return { url: file.data.webViewLink, name: fileName };
     } catch (error: any) {
         console.error("[Drive API Error] Falha ao fazer upload do arquivo:", error);
         throw new Error(`Falha ao fazer upload do PDF para o Drive: ${error.message}`);

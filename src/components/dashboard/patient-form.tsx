@@ -20,6 +20,8 @@ import { Textarea } from "../ui/textarea"
 import { useEffect } from "react"
 import { Combobox } from "../ui/combobox"
 import { withdrawnByOptions } from "@/lib/data"
+import { Badge } from "../ui/badge"
+import { X } from "lucide-react"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
@@ -29,11 +31,22 @@ const formSchema = z.object({
   observations: z.string().optional(),
   receivedDate: z.date().optional(),
   withdrawnBy: z.string().optional(),
-  pdfUrl: z.string().url({ message: "Por favor, insira uma URL válida." }).optional().or(z.literal('')),
-  pdfFile: z
+  pdfFiles: z
     .custom<FileList>()
-    .refine((files) => files === undefined || files.length === 0 || files?.[0]?.size <= MAX_FILE_SIZE, `O tamanho máximo do arquivo é 5MB.`)
-    .refine((files) => files === undefined || files.length === 0 || ACCEPTED_FILE_TYPES.includes(files?.[0]?.type), "Apenas arquivos .pdf são aceitos.")
+    .refine((files) => {
+        if (!files || files.length === 0) return true;
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].size > MAX_FILE_SIZE) return false;
+        }
+        return true;
+    }, `O tamanho máximo por arquivo é 5MB.`)
+    .refine((files) => {
+        if (!files || files.length === 0) return true;
+        for (let i = 0; i < files.length; i++) {
+            if (!ACCEPTED_FILE_TYPES.includes(files[i].type)) return false;
+        }
+        return true;
+    }, "Apenas arquivos .pdf são aceitos.")
     .optional(),
 })
 
@@ -53,7 +66,6 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
       patientName: "",
       observations: "",
       withdrawnBy: "",
-      pdfUrl: "",
     },
   })
 
@@ -64,8 +76,7 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
         observations: exam.observations,
         receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
         withdrawnBy: exam.withdrawnBy,
-        pdfUrl: exam.pdfUrl,
-        pdfFile: undefined,
+        pdfFiles: undefined,
       });
     } else {
       form.reset({
@@ -73,13 +84,12 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
         observations: "",
         receivedDate: new Date(), // Default to today for new exams
         withdrawnBy: "",
-        pdfUrl: "",
-        pdfFile: undefined,
+        pdfFiles: undefined,
       });
     }
   }, [exam, form]);
 
-  const pdfFileRef = form.register("pdfFile");
+  const pdfFileRef = form.register("pdfFiles");
 
   return (
     <Form {...form}>
@@ -154,50 +164,36 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
         />
         <FormField
           control={form.control}
-          name="pdfFile"
+          name="pdfFiles"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Anexar PDF</FormLabel>
+              <FormLabel>Anexar PDFs</FormLabel>
               <FormControl>
-                <Input type="file" accept="application/pdf" {...pdfFileRef} disabled={isSubmitting} />
+                <Input type="file" accept="application/pdf" {...pdfFileRef} disabled={isSubmitting} multiple />
               </FormControl>
               <FormDescription>
-                Anexe um novo PDF aqui. Se um link já existir abaixo, este arquivo o substituirá.
+                Anexe um ou mais PDFs. Novos arquivos substituirão os existentes.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {exam?.pdfLinks && exam.pdfLinks.length > 0 && (
+          <div className="space-y-2">
+            <FormLabel>PDFs Anexados</FormLabel>
+            <div className="flex flex-wrap gap-2">
+              {exam.pdfLinks.map((pdf, index) => (
+                <Badge key={index} variant="secondary" className="pl-2 pr-1">
+                  <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="mr-1 hover:underline">
+                    {pdf.name}
+                  </a>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <FormField
-          control={form.control}
-          name="pdfUrl"
-          render={({ field }) => (
-             exam?.pdfUrl && (
-                <FormItem>
-                  <FormLabel>Link do PDF (Existente)</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center space-x-2">
-                        <Input 
-                            placeholder="https://drive.google.com/..." 
-                            {...field} 
-                            disabled={isSubmitting}
-                            readOnly 
-                        />
-                         <Button 
-                            type="button" 
-                            variant="secondary"
-                            onClick={() => window.open(field.value, '_blank')}
-                        >
-                            Abrir
-                        </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-             )
-          )}
-        />
         <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>Cancelar</Button>
             <Button type="submit" disabled={isSubmitting}>

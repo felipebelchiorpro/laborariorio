@@ -42,14 +42,20 @@ export default function ExamTable() {
   const handleAddOrUpdateExam = async (values: PatientFormValues) => {
     setIsSubmitting(true);
     try {
-      let pdfUrl = values.pdfUrl || undefined;
+      let newPdfLinks = editingExam?.pdfLinks ? [...editingExam.pdfLinks] : [];
 
-      // 1. Handle PDF Upload
-      const pdfFile = values.pdfFile?.[0];
-      if (pdfFile) {
+      // 1. Handle PDF Uploads if new files are provided
+      const pdfFiles = values.pdfFiles;
+      if (pdfFiles && pdfFiles.length > 0) {
+        newPdfLinks = []; // Replace existing PDFs if new ones are uploaded
+        const uploadPromises = Array.from(pdfFiles).map(async (file) => {
+          const fileBuffer = Buffer.from(await file.arrayBuffer());
+          return uploadPdfToDrive(fileBuffer, file.name);
+        });
+        
         try {
-          const fileBuffer = Buffer.from(await pdfFile.arrayBuffer());
-          pdfUrl = await uploadPdfToDrive(fileBuffer, pdfFile.name);
+            const uploadedLinks = await Promise.all(uploadPromises);
+            newPdfLinks.push(...uploadedLinks);
         } catch (uploadError) {
           console.error("Failed to upload PDF for São João:", uploadError);
           toast({
@@ -63,23 +69,23 @@ export default function ExamTable() {
       }
 
       // 2. Prepare Exam Data
-      const examData = {
+      const examData: Partial<Exam> = {
         patientName: values.patientName,
         receivedDate: values.receivedDate?.toISOString(),
         withdrawnBy: values.withdrawnBy,
         observations: values.observations,
-        pdfUrl: pdfUrl,
+        pdfLinks: newPdfLinks,
       };
 
       // 3. Add or Update in Google Sheets
       if (editingExam) {
         // Update
-        const updatedExam: Exam = { ...examData, id: editingExam.id, rowNumber: editingExam.rowNumber };
+        const updatedExam: Exam = { ...editingExam, ...examData };
         await updateExam(SHEET_ID, updatedExam);
         toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
       } else {
         // Add new
-        await addExam(SHEET_ID, examData);
+        await addExam(SHEET_ID, examData as Omit<Exam, 'id' | 'rowNumber'>);
         toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
       }
       

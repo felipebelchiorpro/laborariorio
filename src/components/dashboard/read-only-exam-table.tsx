@@ -58,6 +58,19 @@ export default function ReadOnlyExamTable({ sheetId }: ReadOnlyExamTableProps) {
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    filterFns: {
+        // override the default `contains` filter to be case-insensitive and accent-insensitive
+        contains: (row, id, value) => {
+            const rowValue = row.getValue(id) as string;
+            const filterValue = value as string;
+
+            const normalize = (str: string) => 
+                str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            
+            return normalize(rowValue).includes(normalize(filterValue));
+        }
+    },
+    globalFilterFn: 'contains',
   });
 
   const fetchExams = React.useCallback(async () => {
