@@ -8,7 +8,6 @@ import { randomUUID } from 'crypto';
 
 const SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive.file'
 ];
 // Updated column order: ID, Paciente, Data, Retirado, OBS, PDFs
 const SHEETS_RANGE = 'A:F'; 
