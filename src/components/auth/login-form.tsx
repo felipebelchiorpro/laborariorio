@@ -46,7 +46,8 @@ export function LoginForm() {
     startTransition(async () => {
       const result = await signIn(values.email, values.password);
       if (result.success) {
-        router.push("/"); // Redireciona para a página principal após o login
+        // Força um recarregamento completo para a página principal para garantir que o estado de autenticação seja lido corretamente
+        window.location.href = "/";
       } else {
         setError(result.error || "Ocorreu um erro desconhecido.");
         form.reset();

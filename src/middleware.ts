@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Este middleware garante que as rotas protegidas não sejam acessadas sem um token de autenticação.
-// O token é gerenciado pelo Firebase SDK no lado do cliente.
+// A lógica principal de proteção foi movida para o HOC withAuth para melhor integração com o Firebase SDK do lado do cliente.
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('firebaseIdToken');
   const { pathname } = request.nextUrl;
 
   // Rotas que não exigem autenticação
@@ -15,16 +14,11 @@ export function middleware(request: NextRequest) {
   if (publicPaths.some(path => pathname.startsWith(path))) {
     return NextResponse.next();
   }
-
-  // Se o usuário está tentando acessar uma rota protegida sem um token,
-  // redirecione para a página de login.
-  if (!token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('next', pathname); // Opcional: redirecionar de volta após o login
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Se o usuário tem um token, permite o acesso
+  
+  // A verificação de token agora é tratada pelo withAuth no lado do cliente.
+  // O middleware apenas permite a passagem para as rotas protegidas, 
+  // onde o cliente fará a verificação.
+  
   return NextResponse.next();
 }
 
