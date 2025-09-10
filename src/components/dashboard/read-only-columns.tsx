@@ -3,7 +3,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, FileDown, FileText } from "lucide-react";
+import { ArrowUpDown, Files, FileText } from "lucide-react";
 import type { Exam } from "@/lib/types"
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
@@ -123,7 +123,7 @@ export const readOnlyColumns: ColumnDef<Exam>[] = [
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Abrir PDFs">
-               <FileDown className="h-4 w-4 text-primary" />
+               <Files className="h-4 w-4 text-primary" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
