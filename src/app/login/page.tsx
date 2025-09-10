@@ -10,7 +10,7 @@ export default function LoginPage() {
           <div className="mb-4 rounded-full bg-primary p-4 text-primary-foreground">
             <FlaskConical className="h-16 w-16" />
           </div>
-          <h1 className="text-3xl font-bold font-poppins">LabFlow</h1>
+          <h1 className="text-3xl font-bold font-poppins">Laboratório Caconde</h1>
           <p className="mt-2 text-center text-muted-foreground">
             Use seu email e senha para acessar o painel.
           </p>
