@@ -33,10 +33,8 @@ export async function uploadPdfToCloudinary(base64Data: string, fileName: string
         throw new Error("O upload para o Cloudinary não retornou uma URL segura.");
     }
 
-    // Append .pdf to the URL if Cloudinary didn't add it, to help browsers.
-    const finalUrl = result.secure_url.endsWith('.pdf') ? result.secure_url : `${result.secure_url}.pdf`;
-
-    return { url: finalUrl, name: fileName };
+    // Use the URL directly from Cloudinary without modification
+    return { url: result.secure_url, name: fileName };
   } catch (error: any) {
     console.error("[Cloudinary Error] Falha ao fazer upload do arquivo:", error);
     // Provide a more user-friendly error message
