@@ -10,7 +10,7 @@ const SCOPES = [
     'https://www.googleapis.com/auth/drive.file'
 ];
 const SHEETS_RANGE = 'A:F'; 
-const ID_COLUMN_INDEX = 5; // Column F
+const ID_COLUMN_INDEX = 0; // Column A
 
 async function getAuthClient() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
@@ -40,7 +40,7 @@ async function getAuthClient() {
 
 function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2; 
-  const [patientName, receivedDateStr, withdrawnBy, observations, pdfData, id] = row;
+  const [id, patientName, receivedDateStr, withdrawnBy, observations, pdfData] = row;
 
   if (!patientName || String(patientName).trim() === '') {
     return null;
@@ -96,12 +96,12 @@ function mapExamToRow(exam: Partial<Omit<Exam, 'rowNumber'>>): any[] {
   const pdfData = exam.pdfLinks && exam.pdfLinks.length > 0 ? JSON.stringify(exam.pdfLinks) : '';
   
   return [
+    exam.id || '',
     exam.patientName || '',
     displayDate,
     exam.withdrawnBy || '',
     exam.observations || '',
     pdfData,
-    exam.id || '',
   ];
 }
 
@@ -163,7 +163,7 @@ export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'ro
 async function findRowById(sheets: any, spreadsheetId: string, id: string): Promise<number | null> {
     const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `F:F`, // Only search in the ID column
+        range: `A:A`, // Only search in the ID column
     });
     const ids = response.data.values;
     if (!ids) return null;
