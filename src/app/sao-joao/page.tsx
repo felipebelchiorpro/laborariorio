@@ -24,8 +24,10 @@ import ExamTable from '@/components/dashboard/exam-table-sao-joao';
 import { Button } from '@/components/ui/button';
 import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import withAuth from '@/components/auth/with-auth';
 
-export default function SaoJoaoPage() {
+
+function SaoJoaoPage() {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -93,3 +95,5 @@ export default function SaoJoaoPage() {
     </SidebarProvider>
   );
 }
+
+export default withAuth(SaoJoaoPage);

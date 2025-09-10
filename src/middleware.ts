@@ -2,18 +2,42 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// O Firebase Auth agora é gerenciado no lado do cliente.
-// O middleware pode ser usado para outras finalidades, mas a proteção de rotas
-// baseada em cookies personalizados não é mais a abordagem principal.
-
-// Esta é uma configuração de middleware simplificada. A lógica de redirecionamento
-// se o usuário não estiver logado será tratada no lado do cliente (nos componentes de página).
+// Este middleware garante que as rotas protegidas não sejam acessadas sem um token de autenticação.
+// O token é gerenciado pelo Firebase SDK no lado do cliente.
 export function middleware(request: NextRequest) {
+  const token = request.cookies.get('firebaseIdToken');
+  const { pathname } = request.nextUrl;
+
+  // Rotas que não exigem autenticação
+  const publicPaths = ['/login', '/consulta'];
+
+  // Permite o acesso a rotas públicas
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
+
+  // Se o usuário está tentando acessar uma rota protegida sem um token,
+  // redirecione para a página de login.
+  if (!token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('next', pathname); // Opcional: redirecionar de volta após o login
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Se o usuário tem um token, permite o acesso
   return NextResponse.next();
 }
 
 export const config = {
-  // Este matcher vazio significa que o middleware não será executado em nenhuma rota por enquanto.
-  // Podemos reativá-lo se precisarmos de lógica de servidor para redirecionamentos.
-  matcher: [],
+  // Lista de rotas que serão interceptadas pelo middleware
+  matcher: [
+    /*
+     * Corresponde a todos os caminhos de solicitação, exceto aqueles que começam com:
+     * - api (rotas de API)
+     * - _next/static (arquivos estáticos)
+     * - _next/image (arquivos de otimização de imagem)
+     * - favicon.ico (arquivo de favicon)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 }

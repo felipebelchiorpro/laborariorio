@@ -24,8 +24,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import withAuth from '@/components/auth/with-auth';
 
-export default function Home() {
+function Home() {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -93,3 +94,5 @@ export default function Home() {
     </SidebarProvider>
   );
 }
+
+export default withAuth(Home);
