@@ -243,7 +243,7 @@ export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Pr
                 mimeType: 'application/pdf',
                 body: Readable.from([fileBuffer]),
             },
-            fields: 'id, webViewLink',
+            fields: 'id, webContentLink',
         });
 
         const fileId = file.data.id;
@@ -260,11 +260,11 @@ export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Pr
             },
         });
 
-        if (!file.data.webViewLink) {
-             throw new Error("Falha ao obter o link de visualização do arquivo.");
+        if (!file.data.webContentLink) {
+             throw new Error("Falha ao obter o link de download do arquivo.");
         }
 
-        return { url: file.data.webViewLink, name: fileName };
+        return { url: file.data.webContentLink, name: fileName };
     } catch (error: any) {
         console.error("[Drive API Error] Falha ao fazer upload do arquivo:", error);
         throw new Error(`Falha ao fazer upload do PDF para o Drive: ${error.message}`);
