@@ -164,17 +164,41 @@ export async function deleteExam(spreadsheetId: string, rowNumber: number) {
   if (!rowNumber) {
     throw new Error("O número da linha é necessário para excluir o exame.");
   }
+
   const sheets = await getSheetsApi();
-  const range = `A${rowNumber}:E${rowNumber}`;
 
   try {
-      await sheets.spreadsheets.values.clear({
-        spreadsheetId,
-        range,
-      });
+    const sheetIdResponse = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: 'sheets(properties.sheetId)',
+    });
+
+    const sheetId = sheetIdResponse.data.sheets?.[0]?.properties?.sheetId;
+
+    if (sheetId === null || sheetId === undefined) {
+      throw new Error("Não foi possível encontrar o ID da página da planilha.");
+    }
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: sheetId,
+                dimension: 'ROWS',
+                startIndex: rowNumber - 1,
+                endIndex: rowNumber,
+              },
+            },
+          },
+        ],
+      },
+    });
   } catch (error: any) {
-      console.error("[Sheets API Delete Error]", error);
-      throw new Error(`Falha ao excluir exame: ${error.message}`);
+    console.error("[Sheets API Delete Error]", error);
+    throw new Error(`Falha ao excluir exame: ${error.message}`);
   }
 }
 
