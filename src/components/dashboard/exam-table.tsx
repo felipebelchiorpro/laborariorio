@@ -106,7 +106,7 @@ export default function ExamTable() {
 
   const handleDeleteExam = async (examToDelete: Exam) => {
     try {
-      await deleteExam(SHEET_ID, examToDelete.rowNumber);
+      await deleteExam(SHEET_ID, examToDelete.id);
       toast({ title: "Sucesso", description: "Exame excluído com sucesso." });
       fetchExams(); // Refresh data
     } catch (error) {

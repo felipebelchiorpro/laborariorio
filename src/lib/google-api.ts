@@ -3,12 +3,14 @@ import { google } from 'googleapis';
 import type { Exam, PdfLink } from './types';
 import { parse, isValid, getYear, format } from 'date-fns';
 import { Readable } from 'stream';
+import { randomUUID } from 'crypto';
 
 const SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive.file'
 ];
-const SHEETS_RANGE = 'A:E'; 
+const SHEETS_RANGE = 'A:F'; 
+const ID_COLUMN_INDEX = 5; // Column F
 
 async function getAuthClient() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
@@ -38,7 +40,7 @@ async function getAuthClient() {
 
 function mapRowToExam(row: any[], index: number): Exam | null {
   const rowNumber = index + 2; 
-  const [patientName, receivedDateStr, withdrawnBy, observations, pdfData] = row;
+  const [patientName, receivedDateStr, withdrawnBy, observations, pdfData, id] = row;
 
   if (!patientName || String(patientName).trim() === '') {
     return null;
@@ -79,7 +81,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
 
 
   return {
-    id: `ROW${rowNumber}`,
+    id: String(id || `ROW${rowNumber}`),
     rowNumber,
     patientName: String(patientName || ''),
     receivedDate,
@@ -89,7 +91,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
   };
 }
 
-function mapExamToRow(exam: Partial<Omit<Exam, 'id' | 'rowNumber'>>): any[] {
+function mapExamToRow(exam: Partial<Omit<Exam, 'rowNumber'>>): any[] {
   const displayDate = exam.receivedDate ? format(new Date(exam.receivedDate), 'dd/MM/yyyy') : '';
   const pdfData = exam.pdfLinks && exam.pdfLinks.length > 0 ? JSON.stringify(exam.pdfLinks) : '';
   
@@ -99,6 +101,7 @@ function mapExamToRow(exam: Partial<Omit<Exam, 'id' | 'rowNumber'>>): any[] {
     exam.withdrawnBy || '',
     exam.observations || '',
     pdfData,
+    exam.id || '',
   ];
 }
 
@@ -141,7 +144,9 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 
 export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
     const sheets = await getSheetsApi();
-    const values = [mapExamToRow(exam)];
+    const newId = randomUUID();
+    const examWithId = { ...exam, id: newId };
+    const values = [mapExamToRow(examWithId)];
 
     try {
         await sheets.spreadsheets.values.append({
@@ -155,12 +160,34 @@ export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'ro
     }
 }
 
+async function findRowById(sheets: any, spreadsheetId: string, id: string): Promise<number | null> {
+    const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `F:F`, // Only search in the ID column
+    });
+    const ids = response.data.values;
+    if (!ids) return null;
+
+    for (let i = 0; i < ids.length; i++) {
+        if (ids[i][0] === id) {
+            return i + 1; // Return 1-based row number
+        }
+    }
+    return null;
+}
+
 export async function updateExam(spreadsheetId: string, exam: Exam) {
-    if (!exam.rowNumber) {
-        throw new Error("O número da linha é necessário para atualizar o exame.");
+    if (!exam.id) {
+        throw new Error("O ID do exame é necessário para atualizar.");
     }
     const sheets = await getSheetsApi();
-    const range = `A${exam.rowNumber}:E${exam.rowNumber}`;
+    const rowNumber = await findRowById(sheets, spreadsheetId, exam.id);
+
+    if (!rowNumber) {
+        throw new Error("Exame não encontrado para atualização. Pode ter sido excluído.");
+    }
+
+    const range = `A${rowNumber}:F${rowNumber}`;
     const values = [mapExamToRow(exam)];
 
     try {
@@ -175,12 +202,17 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
     }
 }
 
-export async function deleteExam(spreadsheetId: string, rowNumber: number) {
-  if (!rowNumber) {
-    throw new Error("O número da linha é necessário para excluir o exame.");
+export async function deleteExam(spreadsheetId: string, id: string) {
+  if (!id) {
+    throw new Error("O ID do exame é necessário para excluir.");
   }
-
   const sheets = await getSheetsApi();
+  const rowNumber = await findRowById(sheets, spreadsheetId, id);
+
+  if (!rowNumber) {
+      console.warn(`Tentativa de exclusão de um exame com ID '${id}' que não foi encontrado.`);
+      return; // Silently fail if not found, as it might have been already deleted.
+  }
 
   try {
     const sheetIdResponse = await sheets.spreadsheets.get({
