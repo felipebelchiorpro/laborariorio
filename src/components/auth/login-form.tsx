@@ -44,11 +44,8 @@ export function LoginForm() {
     startTransition(async () => {
       const result = await login(values.password);
       if (result.success) {
-        if (result.role === 'admin') {
-            router.push("/");
-        } else if (result.role === 'ubs') {
-            router.push("/consulta");
-        }
+        // A lógica de redirecionamento agora é tratada pelo middleware.
+        // Apenas atualizamos a página para que o middleware possa fazer seu trabalho.
         router.refresh();
       } else {
         setError("A senha fornecida está incorreta.");
