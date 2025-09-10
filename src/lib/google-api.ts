@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 import type { Exam, PdfLink } from './types';
 import { parse, isValid, format } from 'date-fns';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { app } from './firebase';
+import { storage } from './firebase'; // Importa a instância de storage já configurada
 import { randomUUID } from 'crypto';
 
 const SCOPES = [
@@ -258,8 +258,6 @@ export async function deleteExam(spreadsheetId: string, id: string) {
 }
 
 // --- Firebase Storage Functions ---
-
-const storage = getStorage(app);
 
 export async function uploadPdfToStorage(base64Data: string, fileName: string, mimeType: string): Promise<PdfLink> {
     try {
