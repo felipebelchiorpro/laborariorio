@@ -6,7 +6,7 @@ import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PatientForm, type PatientFormValues } from "./patient-form";
-import { addExam, getExams, updateExam, deleteExam, uploadPdfToDrive } from "@/lib/google-api";
+import { addExam, getExams, updateExam, deleteExam, uploadPdfToStorage } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
 
 const SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
@@ -57,7 +57,7 @@ export default function ExamTable() {
       if (newFiles.length > 0) {
         const uploadPromises = newFiles.map(async (file) => {
           const base64String = await fileToBase64(file);
-          return uploadPdfToDrive(base64String, file.name, file.type);
+          return uploadPdfToStorage(base64String, file.name, file.type);
         });
         const uploadedLinks = await Promise.all(uploadPromises);
         finalPdfLinks.push(...uploadedLinks);

@@ -2,7 +2,8 @@
 import { google } from 'googleapis';
 import type { Exam, PdfLink } from './types';
 import { parse, isValid, format } from 'date-fns';
-import { Readable } from 'stream';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { app } from './firebase';
 import { randomUUID } from 'crypto';
 
 const SCOPES = [
@@ -256,55 +257,24 @@ export async function deleteExam(spreadsheetId: string, id: string) {
   }
 }
 
-// --- Google Drive Functions ---
+// --- Firebase Storage Functions ---
 
-async function getDriveApi() {
-    const auth = await getAuthClient();
-    return google.drive({ version: 'v3', auth });
-}
+const storage = getStorage(app);
 
-export async function uploadPdfToDrive(base64Data: string, fileName: string, mimeType: string): Promise<PdfLink> {
-    const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-    if (!driveFolderId) {
-        throw new Error("A variável de ambiente GOOGLE_DRIVE_FOLDER_ID não está definida. Verifique o arquivo .env.");
-    }
-
-    const drive = await getDriveApi();
-    const fileBuffer = Buffer.from(base64Data, 'base64');
-
+export async function uploadPdfToStorage(base64Data: string, fileName: string, mimeType: string): Promise<PdfLink> {
     try {
-        const file = await drive.files.create({
-            requestBody: {
-                name: fileName,
-                parents: [driveFolderId],
-                mimeType: mimeType,
-            },
-            media: {
-                mimeType: mimeType,
-                body: Readable.from(fileBuffer),
-            },
-            fields: 'id, webViewLink',
-            supportsAllDrives: true, // Crucial for Shared Drive support
+        const storageRef = ref(storage, `exams/${fileName}-${randomUUID()}`);
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        const snapshot = await uploadBytes(storageRef, buffer, {
+            contentType: mimeType,
         });
 
-        const fileId = file.data.id;
-        if (!fileId || !file.data.webViewLink) {
-            throw new Error("Falha ao obter o ID ou o link de visualização do arquivo após o upload.");
-        }
+        const downloadURL = await getDownloadURL(snapshot.ref);
 
-        // Make the file publicly readable (permission handling might differ slightly for shared drives but this is generally safe)
-        await drive.permissions.create({
-            fileId: fileId,
-            requestBody: {
-                role: 'reader',
-                type: 'anyone',
-            },
-            supportsAllDrives: true, // Also needed here
-        });
-
-        return { url: file.data.webViewLink, name: fileName };
+        return { url: downloadURL, name: fileName };
     } catch (error: any) {
-        console.error("[Drive API Error] Falha ao fazer upload do arquivo:", error);
-        throw new Error(`Falha ao fazer upload do PDF para o Drive: ${error.message}`);
+        console.error("[Firebase Storage Error] Falha ao fazer upload do arquivo:", error);
+        throw new Error(`Falha ao fazer upload do PDF para o Storage: ${error.message}`);
     }
 }
