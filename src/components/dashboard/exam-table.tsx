@@ -44,12 +44,12 @@ export default function ExamTable() {
     try {
       let finalPdfLinks: PdfLink[] = values.existingPdfLinks || [];
 
-      // Handle new file uploads
       const newFiles = values.pdfFiles ? Array.from(values.pdfFiles) : [];
       if (newFiles.length > 0) {
         const uploadPromises = newFiles.map(async (file) => {
-          const fileBuffer = Buffer.from(await file.arrayBuffer());
-          return uploadPdfToDrive(fileBuffer, file.name);
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          return uploadPdfToDrive(buffer, file.name, file.type);
         });
         const uploadedLinks = await Promise.all(uploadPromises);
         finalPdfLinks.push(...uploadedLinks);
