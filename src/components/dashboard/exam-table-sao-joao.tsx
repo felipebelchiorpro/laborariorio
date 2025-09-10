@@ -6,7 +6,7 @@ import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PatientForm, type PatientFormValues } from "./patient-form";
-import { addExam, getExams, updateExam, deleteExam, uploadPdfToDrive } from "@/lib/google-api";
+import { addExam, getExams, updateExam, deleteExam } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
 
 const SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID!;
@@ -48,24 +48,23 @@ export default function ExamTable() {
       const pdfFiles = values.pdfFiles;
       if (pdfFiles && pdfFiles.length > 0) {
         newPdfLinks = []; // Replace existing PDFs if new ones are uploaded
-        const uploadPromises = Array.from(pdfFiles).map(async (file) => {
-          const fileBuffer = Buffer.from(await file.arrayBuffer());
-          return uploadPdfToDrive(fileBuffer, file.name);
+        const formData = new FormData();
+        Array.from(pdfFiles).forEach(file => {
+          formData.append('files', file);
         });
-        
-        try {
-            const uploadedLinks = await Promise.all(uploadPromises);
-            newPdfLinks.push(...uploadedLinks);
-        } catch (uploadError) {
-          console.error("Failed to upload PDF for São João:", uploadError);
-          toast({
-            title: "Erro no Upload do PDF",
-            description: "O arquivo PDF não pôde ser enviado. Verifique sua conexão e as permissões do Google Drive.",
-            variant: "destructive"
-          });
-          setIsSubmitting(false);
-          return;
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Falha no upload do PDF.');
         }
+
+        const uploadedLinks = await response.json();
+        newPdfLinks.push(...uploadedLinks);
       }
 
       // 2. Prepare Exam Data
@@ -85,17 +84,18 @@ export default function ExamTable() {
         toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
       } else {
         // Add new
-        await addExam(SHEET_ID, examData as Omit<Exam, 'id' | 'rowNumber'>);
+        await addExam(SHEET_ID, examData as Omit<Exam, 'id'>);
         toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
       }
       
       setIsFormOpen(false);
       fetchExams();
     } catch (error) {
+       const errorMessage = (error instanceof Error) ? error.message : "Ocorreu um erro desconhecido.";
        console.error("Failed to save exam for São João:", error);
        toast({
-        title: "Erro ao salvar na planilha",
-        description: "Não foi possível salvar o exame.",
+        title: "Erro ao salvar",
+        description: errorMessage,
         variant: "destructive"
       })
     } finally {

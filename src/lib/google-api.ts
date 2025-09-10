@@ -1,7 +1,7 @@
 'use server';
 import { google } from 'googleapis';
 import type { Exam, PdfLink } from './types';
-import { parse, isValid, getYear, format } from 'date-fns';
+import { parse, isValid, format } from 'date-fns';
 import { Readable } from 'stream';
 import { randomUUID } from 'crypto';
 
@@ -9,8 +9,9 @@ const SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive.file'
 ];
+// Updated column order: ID, Paciente, Data, Retirado, OBS, PDFs
 const SHEETS_RANGE = 'A:F'; 
-const ID_COLUMN_INDEX = 0; // Column A
+const ID_COLUMN_INDEX = 0; // Column A is now ID
 
 async function getAuthClient() {
   const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
@@ -39,9 +40,10 @@ async function getAuthClient() {
 // --- Google Sheets Functions ---
 
 function mapRowToExam(row: any[], index: number): Exam | null {
-  const rowNumber = index + 2; 
+  const rowNumber = index + 2; // GSheets is 1-based, and we skip the header
   const [id, patientName, receivedDateStr, withdrawnBy, observations, pdfData] = row;
 
+  // If there's no patient name, we can safely assume it's an empty row.
   if (!patientName || String(patientName).trim() === '') {
     return null;
   }
@@ -51,13 +53,9 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     try {
       const dateString = String(receivedDateStr).trim();
       if (dateString) {
+        // Attempt to parse dd/MM/yyyy format
         let parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
         
-        if (!isValid(parsedDate)) {
-           const currentYear = getYear(new Date());
-           parsedDate = parse(`${dateString}/${currentYear}`, 'dd/MM/yyyy', new Date());
-        }
-
         if (isValid(parsedDate)) {
           receivedDate = parsedDate.toISOString();
         }
@@ -72,7 +70,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     try {
       pdfLinks = JSON.parse(pdfData);
     } catch (e) {
-      // Handle legacy single URL format
+      // Handle legacy single URL format for backward compatibility
       if (typeof pdfData === 'string' && pdfData.startsWith('http')) {
         pdfLinks = [{ url: pdfData, name: 'Resultado.pdf' }];
       }
@@ -81,8 +79,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
 
 
   return {
-    id: String(id || `ROW${rowNumber}`),
-    rowNumber,
+    id: String(id || `MISSING_ID_ROW_${rowNumber}`), // Use a placeholder if ID is missing
     patientName: String(patientName || ''),
     receivedDate,
     withdrawnBy: withdrawnBy || undefined,
@@ -95,6 +92,7 @@ function mapExamToRow(exam: Partial<Omit<Exam, 'rowNumber'>>): any[] {
   const displayDate = exam.receivedDate ? format(new Date(exam.receivedDate), 'dd/MM/yyyy') : '';
   const pdfData = exam.pdfLinks && exam.pdfLinks.length > 0 ? JSON.stringify(exam.pdfLinks) : '';
   
+  // Ensure the order matches the spreadsheet: ID, Paciente, Data, Retirado, OBS, PDFs
   return [
     exam.id || '',
     exam.patientName || '',
@@ -112,6 +110,7 @@ async function getSheetsApi() {
 
 export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   if (!spreadsheetId) {
+    console.warn("getExams called with no spreadsheetId.");
     return [];
   }
   try {
@@ -124,10 +123,11 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
 
     const rows = response.data.values;
     
-    if (!rows || rows.length <= 1) { 
+    if (!rows || rows.length <= 1) { // <= 1 to account for header-only sheet
       return [];
     }
     
+    // Skip header row (index 0), map the rest
     const exams = rows
       .slice(1)
       .map((row: any[], index: number) => mapRowToExam(row, index + 1))
@@ -163,12 +163,13 @@ export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'ro
 async function findRowById(sheets: any, spreadsheetId: string, id: string): Promise<number | null> {
     const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `A:A`, // Only search in the ID column
+        range: `A:A`, // Only search in the ID column (Column A)
     });
     const ids = response.data.values;
     if (!ids) return null;
 
-    for (let i = 0; i < ids.length; i++) {
+    // Start from index 1 to skip header
+    for (let i = 1; i < ids.length; i++) {
         if (ids[i][0] === id) {
             return i + 1; // Return 1-based row number
         }
@@ -184,7 +185,12 @@ export async function updateExam(spreadsheetId: string, exam: Exam) {
     const rowNumber = await findRowById(sheets, spreadsheetId, exam.id);
 
     if (!rowNumber) {
-        throw new Error("Exame não encontrado para atualização. Pode ter sido excluído.");
+        // This can happen if the row was deleted by another user.
+        // Or if a new item without an ID is being edited.
+        // For robustness, let's add it as a new exam.
+        console.warn(`Exame com ID ${exam.id} não encontrado para atualização. Adicionando como novo.`);
+        await addExam(spreadsheetId, exam);
+        return;
     }
 
     const range = `A${rowNumber}:F${rowNumber}`;
@@ -273,9 +279,9 @@ export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Pr
             },
             media: {
                 mimeType: 'application/pdf',
-                body: Readable.from([fileBuffer]),
+                body: Readable.from(fileBuffer),
             },
-            fields: 'id, webContentLink',
+            fields: 'id, webContentLink', // Use webContentLink for direct download
         });
 
         const fileId = file.data.id;
@@ -283,7 +289,7 @@ export async function uploadPdfToDrive(fileBuffer: Buffer, fileName: string): Pr
             throw new Error("Falha ao obter o ID do arquivo após o upload.");
         }
 
-        // Tornar o arquivo publicamente legível
+        // Make the file publicly readable
         await drive.permissions.create({
             fileId: fileId,
             requestBody: {
