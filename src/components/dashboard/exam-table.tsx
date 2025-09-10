@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import type { Exam } from "@/lib/types";
+import type { Exam, PdfLink } from "@/lib/types";
 import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PatientForm, type PatientFormValues } from "./patient-form";
-import { addExam, getExams, updateExam, deleteExam } from "@/lib/google-api";
+import { addExam, getExams, updateExam, deleteExam, uploadPdfToDrive } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
 
 const SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
@@ -42,33 +42,19 @@ export default function ExamTable() {
   const handleAddOrUpdateExam = async (values: PatientFormValues) => {
     setIsSubmitting(true);
     try {
-      // Start with the list of PDFs that were not removed in the form
-      let finalPdfLinks = values.existingPdfLinks || [];
+      let finalPdfLinks: PdfLink[] = values.existingPdfLinks || [];
 
       // Handle new file uploads
-      const pdfFiles = values.pdfFiles;
-      if (pdfFiles && pdfFiles.length > 0) {
-        const formData = new FormData();
-        Array.from(pdfFiles).forEach(file => {
-          formData.append('files', file);
+      const newFiles = values.pdfFiles ? Array.from(values.pdfFiles) : [];
+      if (newFiles.length > 0) {
+        const uploadPromises = newFiles.map(async (file) => {
+          const fileBuffer = Buffer.from(await file.arrayBuffer());
+          return uploadPdfToDrive(fileBuffer, file.name);
         });
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Falha no upload do PDF.');
-        }
-
-        const uploadedLinks = await response.json();
-        // Add new links to the list
+        const uploadedLinks = await Promise.all(uploadPromises);
         finalPdfLinks.push(...uploadedLinks);
       }
 
-      // Prepare Exam Data
       const examData: Partial<Exam> = {
         patientName: values.patientName,
         receivedDate: values.receivedDate?.toISOString(),
@@ -77,14 +63,11 @@ export default function ExamTable() {
         pdfLinks: finalPdfLinks,
       };
 
-      // Add or Update in Google Sheets
       if (editingExam) {
-        // Update
         const updatedExam: Exam = { ...editingExam, ...examData };
         await updateExam(SHEET_ID, updatedExam);
         toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
       } else {
-        // Add new
         await addExam(SHEET_ID, examData as Omit<Exam, 'id' | 'rowNumber'>);
         toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
       }
