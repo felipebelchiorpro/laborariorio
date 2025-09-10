@@ -85,6 +85,7 @@ function mapRowToExam(row: any[], index: number): Exam | null {
     withdrawnBy: withdrawnBy || undefined,
     observations: observations || '',
     pdfLinks,
+    rowNumber: rowNumber
   };
 }
 
