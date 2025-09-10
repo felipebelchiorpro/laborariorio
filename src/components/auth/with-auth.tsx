@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
+import { FlaskConical } from 'lucide-react';
 
 const auth = getAuth(app);
 
@@ -30,14 +31,20 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
 
     if (loading) {
       return (
-        <div className="flex h-screen w-full items-center justify-center p-4">
-          <div className="flex flex-col items-center space-y-4">
-             <Skeleton className="h-12 w-12 rounded-full" />
-             <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
+        <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+            <div className="flex flex-col items-center space-y-4">
+                <div className="relative mb-4">
+                    <FlaskConical className="h-16 w-16 text-primary" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary"></div>
+                    </div>
+                </div>
+                <p className="text-muted-foreground">Verificando autenticação...</p>
+                <div className="space-y-2 pt-4">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                </div>
             </div>
-          </div>
         </div>
       )
     }
