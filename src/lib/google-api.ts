@@ -284,6 +284,7 @@ export async function uploadPdfToDrive(base64Data: string, fileName: string, mim
                 body: Readable.from(fileBuffer),
             },
             fields: 'id, webViewLink',
+            supportsAllDrives: true, // Crucial for Shared Drive support
         });
 
         const fileId = file.data.id;
@@ -291,13 +292,14 @@ export async function uploadPdfToDrive(base64Data: string, fileName: string, mim
             throw new Error("Falha ao obter o ID ou o link de visualização do arquivo após o upload.");
         }
 
-        // Make the file publicly readable
+        // Make the file publicly readable (permission handling might differ slightly for shared drives but this is generally safe)
         await drive.permissions.create({
             fileId: fileId,
             requestBody: {
                 role: 'reader',
                 type: 'anyone',
             },
+            supportsAllDrives: true, // Also needed here
         });
 
         return { url: file.data.webViewLink, name: fileName };
