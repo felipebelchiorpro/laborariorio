@@ -5,7 +5,7 @@ import type { Exam } from "@/lib/types";
 import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PatientForm } from "./patient-form";
+import { PatientForm, type PatientFormValues } from "./patient-form";
 import { addExam, getExams, updateExam, deleteExam, uploadPdfToDrive } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
 
@@ -39,49 +39,62 @@ export default function ExamTable() {
     fetchExams();
   }, [fetchExams]);
 
-  const handleAddOrUpdateExam = async (formData: FormData) => {
+  const handleAddOrUpdateExam = async (values: PatientFormValues) => {
     setIsSubmitting(true);
     try {
-        const pdfFile = formData.get('pdfFile') as File | null;
-        let pdfUrl = formData.get('pdfUrl') as string | null;
+      let pdfUrl = values.pdfUrl || undefined;
 
-        if (pdfFile && pdfFile.size > 0) {
-            const fileBuffer = Buffer.from(await pdfFile.arrayBuffer());
-            pdfUrl = await uploadPdfToDrive(fileBuffer, pdfFile.name);
+      // 1. Handle PDF Upload
+      const pdfFile = values.pdfFile?.[0];
+      if (pdfFile) {
+        try {
+          const fileBuffer = Buffer.from(await pdfFile.arrayBuffer());
+          pdfUrl = await uploadPdfToDrive(fileBuffer, pdfFile.name);
+        } catch (uploadError) {
+          console.error("Failed to upload PDF for São João:", uploadError);
+          toast({
+            title: "Erro no Upload do PDF",
+            description: "O arquivo PDF não pôde ser enviado. Verifique sua conexão e as permissões do Google Drive.",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
         }
+      }
 
-        const examData = {
-          patientName: formData.get('patientName') as string,
-          receivedDate: formData.get('receivedDate') as string | undefined,
-          withdrawnBy: formData.get('withdrawnBy') as string | undefined,
-          observations: formData.get('observations') as string | undefined,
-          pdfUrl: pdfUrl || undefined,
-        };
+      // 2. Prepare Exam Data
+      const examData = {
+        patientName: values.patientName,
+        receivedDate: values.receivedDate?.toISOString(),
+        withdrawnBy: values.withdrawnBy,
+        observations: values.observations,
+        pdfUrl: pdfUrl,
+      };
 
-        const id = formData.get('id') as string | null;
-        if (id) {
-            // Update
-            const rowNumber = parseInt(formData.get('rowNumber') as string, 10);
-            const updatedExam: Exam = { ...examData, id, rowNumber };
-            await updateExam(SHEET_ID, updatedExam);
-            toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
-        } else {
-            // Add new
-            await addExam(SHEET_ID, examData);
-            toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
-        }
-        
-        setIsFormOpen(false);
-        fetchExams();
+      // 3. Add or Update in Google Sheets
+      if (editingExam) {
+        // Update
+        const updatedExam: Exam = { ...examData, id: editingExam.id, rowNumber: editingExam.rowNumber };
+        await updateExam(SHEET_ID, updatedExam);
+        toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
+      } else {
+        // Add new
+        await addExam(SHEET_ID, examData);
+        toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
+      }
+      
+      setIsFormOpen(false);
+      fetchExams();
     } catch (error) {
        console.error("Failed to save exam for São João:", error);
        toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar o exame na planilha.",
+        title: "Erro ao salvar na planilha",
+        description: "Não foi possível salvar o exame.",
         variant: "destructive"
       })
     } finally {
         setIsSubmitting(false);
+        setEditingExam(null);
     }
   };
 
@@ -110,6 +123,13 @@ export default function ExamTable() {
     setIsFormOpen(true);
   };
 
+  const handleCloseDialog = () => {
+    if (!isSubmitting) {
+      setIsFormOpen(false);
+      setEditingExam(null);
+    }
+  }
+
   const columns = getColumns(openFormForEdit, handleDeleteExam);
 
   return (
@@ -119,7 +139,7 @@ export default function ExamTable() {
         data={exams} 
         onAddPatient={openFormForAdd}
       />
-      <Dialog open={isFormOpen} onOpenChange={(isOpen) => !isSubmitting && setIsFormOpen(isOpen)}>
+      <Dialog open={isFormOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{editingExam ? 'Editar Detalhes do Exame' : 'Registrar Novo Paciente'}</DialogTitle>
@@ -127,7 +147,7 @@ export default function ExamTable() {
           <PatientForm 
             exam={editingExam}
             onSubmit={handleAddOrUpdateExam} 
-            onDone={() => setIsFormOpen(false)}
+            onDone={handleCloseDialog}
             isSubmitting={isSubmitting}
           />
         </DialogContent>

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -38,11 +37,11 @@ const formSchema = z.object({
     .optional(),
 })
 
-type PatientFormValues = z.infer<typeof formSchema>
+export type PatientFormValues = z.infer<typeof formSchema>
 
 interface PatientFormProps {
     exam?: Exam | null;
-    onSubmit: (data: FormData) => void;
+    onSubmit: (data: PatientFormValues) => void;
     onDone: () => void;
     isSubmitting?: boolean;
 }
@@ -66,12 +65,13 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
         receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
         withdrawnBy: exam.withdrawnBy,
         pdfUrl: exam.pdfUrl,
+        pdfFile: undefined,
       });
     } else {
       form.reset({
         patientName: "",
         observations: "",
-        receivedDate: undefined,
+        receivedDate: new Date(), // Default to today for new exams
         withdrawnBy: "",
         pdfUrl: "",
         pdfFile: undefined,
@@ -79,41 +79,11 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
     }
   }, [exam, form]);
 
-  function handleSubmit(data: PatientFormValues) {
-    const formData = new FormData();
-    
-    // Adiciona o ID do exame se estiver editando
-    if (exam?.id) {
-        formData.append('id', exam.id);
-        formData.append('rowNumber', String(exam.rowNumber));
-    }
-    
-    formData.append('patientName', data.patientName);
-    if (data.receivedDate) {
-        formData.append('receivedDate', data.receivedDate.toISOString());
-    }
-    if (data.withdrawnBy) {
-        formData.append('withdrawnBy', data.withdrawnBy);
-    }
-    if (data.observations) {
-        formData.append('observations', data.observations);
-    }
-    // Adiciona a URL do PDF existente se não houver um novo arquivo
-    if (data.pdfUrl && (!data.pdfFile || data.pdfFile.length === 0)) {
-        formData.append('pdfUrl', data.pdfUrl);
-    }
-    if (data.pdfFile && data.pdfFile.length > 0) {
-        formData.append('pdfFile', data.pdfFile[0]);
-    }
-    
-    onSubmit(formData);
-  }
-
   const pdfFileRef = form.register("pdfFile");
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="patientName"
@@ -121,7 +91,7 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
             <FormItem>
               <FormLabel>Nome do Paciente</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} disabled={isSubmitting} />
+                <Input placeholder="Nome completo do paciente" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -150,7 +120,7 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
           name="withdrawnBy"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-                <FormLabel>Retirado Por</FormLabel>
+                <FormLabel>Retirado Por / Destino</FormLabel>
                <Combobox
                 options={withdrawnByOptions}
                 value={field.value ?? ''}
@@ -203,13 +173,29 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
           control={form.control}
           name="pdfUrl"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Link do PDF (Existente)</FormLabel>
-              <FormControl>
-                <Input placeholder="https://drive.google.com/..." {...field} disabled={isSubmitting}/>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+             exam?.pdfUrl && (
+                <FormItem>
+                  <FormLabel>Link do PDF (Existente)</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center space-x-2">
+                        <Input 
+                            placeholder="https://drive.google.com/..." 
+                            {...field} 
+                            disabled={isSubmitting}
+                            readOnly 
+                        />
+                         <Button 
+                            type="button" 
+                            variant="secondary"
+                            onClick={() => window.open(field.value, '_blank')}
+                        >
+                            Abrir
+                        </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+             )
           )}
         />
         <div className="flex justify-end space-x-2 pt-4">
