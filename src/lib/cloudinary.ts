@@ -26,7 +26,7 @@ export async function uploadPdfToCloudinary(base64Data: string, fileName: string
       resource_type: 'raw', // Use 'raw' for non-image files like PDFs
       public_id: fileName, // Use original file name as public ID
       access_mode: 'public', // Make the file publicly accessible
-      format: 'pdf',
+      format: 'pdf', // <<< ADICIONADO: Garante que o arquivo seja tratado como PDF
       overwrite: true, // Overwrite if a file with the same name exists
     });
 
