@@ -25,7 +25,9 @@ export async function uploadPdfToCloudinary(base64Data: string, fileName: string
     const result = await cloudinary.uploader.upload(dataUri, {
       resource_type: 'raw', // Use 'raw' for non-image files like PDFs
       public_id: fileName, // Use original file name as public ID
+      access_mode: 'public', // Make the file publicly accessible
       format: 'pdf',
+      overwrite: true, // Overwrite if a file with the same name exists
     });
 
     if (!result.secure_url) {
