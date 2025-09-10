@@ -21,10 +21,20 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReadOnlyExamTable from '@/components/dashboard/read-only-exam-table';
 
-const SAO_LUCAS_SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
-const SAO_JOAO_SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID!;
+const SAO_LUCAS_SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID;
+const SAO_JOAO_SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID;
 
 export default function ConsultaPage() {
+  if (!SAO_LUCAS_SHEET_ID || !SAO_JOAO_SHEET_ID) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <p className="text-red-500">
+                As variáveis de ambiente para os IDs das planilhas não foram configuradas.
+            </p>
+        </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
