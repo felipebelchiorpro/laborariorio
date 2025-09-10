@@ -5,16 +5,16 @@ import { cookies } from "next/headers";
 
 const SESSION_COOKIE_NAME = "lab_session";
 
-// As variáveis de ambiente são lidas diretamente do processo
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const UBS_PASSWORD = process.env.UBS_PASSWORD;
-
 type LoginResult = {
     success: boolean;
     role: 'admin' | 'ubs' | null;
 }
 
 export async function login(password: string): Promise<LoginResult> {
+  // Lendo as variáveis de ambiente DENTRO da função para garantir que sejam carregadas a cada chamada.
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+  const UBS_PASSWORD = process.env.UBS_PASSWORD;
+
   // Verificação explícita para garantir que as senhas foram carregadas do .env
   if (!ADMIN_PASSWORD || !UBS_PASSWORD) {
     console.error("ERRO CRÍTICO: As variáveis de ambiente ADMIN_PASSWORD e/ou UBS_PASSWORD não foram carregadas. Verifique o arquivo .env na raiz do projeto.");
