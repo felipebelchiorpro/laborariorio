@@ -15,7 +15,13 @@ const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result.split(',')[1]);
+      } else {
+        reject(new Error("Falha ao ler o arquivo como string Base64."));
+      }
+    };
     reader.onerror = error => reject(error);
   });
 };
@@ -57,7 +63,6 @@ export default function ExamTable() {
       if (newFiles.length > 0) {
         const uploadPromises = newFiles.map(async (file) => {
           const base64String = await fileToBase64(file);
-          // Use the new Cloudinary upload function
           return uploadPdfToCloudinary(base64String, file.name);
         });
         const uploadedLinks = await Promise.all(uploadPromises);
