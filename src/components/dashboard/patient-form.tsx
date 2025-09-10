@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
-import type { Exam } from "@/lib/types"
+import type { Exam, PdfLink } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Combobox } from "../ui/combobox"
 import { withdrawnByOptions } from "@/lib/data"
 import { Badge } from "../ui/badge"
@@ -48,6 +48,7 @@ const formSchema = z.object({
         return true;
     }, "Apenas arquivos .pdf são aceitos.")
     .optional(),
+  existingPdfLinks: z.array(z.object({ url: z.string(), name: z.string() })).optional(),
 })
 
 export type PatientFormValues = z.infer<typeof formSchema>
@@ -66,6 +67,7 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
       patientName: "",
       observations: "",
       withdrawnBy: "",
+      existingPdfLinks: [],
     },
   })
 
@@ -77,6 +79,7 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
         receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
         withdrawnBy: exam.withdrawnBy,
         pdfFiles: undefined,
+        existingPdfLinks: exam.pdfLinks || [],
       });
     } else {
       form.reset({
@@ -85,11 +88,17 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
         receivedDate: new Date(), // Default to today for new exams
         withdrawnBy: "",
         pdfFiles: undefined,
+        existingPdfLinks: [],
       });
     }
   }, [exam, form]);
 
   const pdfFileRef = form.register("pdfFiles");
+
+  const handleRemovePdf = (urlToRemove: string) => {
+    const currentPdfs = form.getValues("existingPdfLinks") || [];
+    form.setValue("existingPdfLinks", currentPdfs.filter(pdf => pdf.url !== urlToRemove));
+  };
 
   return (
     <Form {...form}>
@@ -167,32 +176,47 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
           name="pdfFiles"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Anexar PDFs</FormLabel>
+              <FormLabel>Anexar Novos PDFs</FormLabel>
               <FormControl>
                 <Input type="file" accept="application/pdf" {...pdfFileRef} disabled={isSubmitting} multiple />
               </FormControl>
               <FormDescription>
-                Anexe um ou mais PDFs. Novos arquivos substituirão os existentes.
+                Adicione novos arquivos. Para remover um anexo existente, clique no "X" ao lado dele.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        {exam?.pdfLinks && exam.pdfLinks.length > 0 && (
-          <div className="space-y-2">
-            <FormLabel>PDFs Anexados</FormLabel>
-            <div className="flex flex-wrap gap-2">
-              {exam.pdfLinks.map((pdf, index) => (
-                <Badge key={index} variant="secondary" className="pl-2 pr-1">
-                  <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="mr-1 hover:underline">
-                    {pdf.name}
-                  </a>
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+        <FormField
+          control={form.control}
+          name="existingPdfLinks"
+          render={({ field }) => (
+             <FormItem>
+                {field.value && field.value.length > 0 && (
+                    <FormLabel>PDFs Anexados</FormLabel>
+                )}
+                <div className="flex flex-wrap gap-2">
+                {field.value?.map((pdf, index) => (
+                    <Badge key={index} variant="secondary" className="pl-2 pr-1 flex items-center gap-1">
+                    <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="mr-1 hover:underline">
+                        {pdf.name}
+                    </a>
+                    <button
+                        type="button"
+                        onClick={() => handleRemovePdf(pdf.url)}
+                        className="rounded-full hover:bg-muted-foreground/20 p-0.5 disabled:pointer-events-none"
+                        aria-label={`Remover ${pdf.name}`}
+                        disabled={isSubmitting}
+                    >
+                        <X className="h-3 w-3" />
+                    </button>
+                    </Badge>
+                ))}
+                </div>
+            </FormItem>
+          )}
+        />
 
         <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>Cancelar</Button>

@@ -42,12 +42,12 @@ export default function ExamTable() {
   const handleAddOrUpdateExam = async (values: PatientFormValues) => {
     setIsSubmitting(true);
     try {
-      let newPdfLinks = editingExam?.pdfLinks ? [...editingExam.pdfLinks] : [];
+      // Start with the list of PDFs that were not removed in the form
+      let finalPdfLinks = values.existingPdfLinks || [];
 
-      // 1. Handle PDF Uploads if new files are provided
+      // Handle new file uploads
       const pdfFiles = values.pdfFiles;
       if (pdfFiles && pdfFiles.length > 0) {
-        newPdfLinks = []; // Replace existing PDFs if new ones are uploaded
         const formData = new FormData();
         Array.from(pdfFiles).forEach(file => {
           formData.append('files', file);
@@ -64,19 +64,20 @@ export default function ExamTable() {
         }
 
         const uploadedLinks = await response.json();
-        newPdfLinks.push(...uploadedLinks);
+        // Add new links to the list
+        finalPdfLinks.push(...uploadedLinks);
       }
 
-      // 2. Prepare Exam Data
+      // Prepare Exam Data
       const examData: Partial<Exam> = {
         patientName: values.patientName,
         receivedDate: values.receivedDate?.toISOString(),
         withdrawnBy: values.withdrawnBy,
         observations: values.observations,
-        pdfLinks: newPdfLinks,
+        pdfLinks: finalPdfLinks,
       };
 
-      // 3. Add or Update in Google Sheets
+      // Add or Update in Google Sheets
       if (editingExam) {
         // Update
         const updatedExam: Exam = { ...editingExam, ...examData };
@@ -84,7 +85,7 @@ export default function ExamTable() {
         toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
       } else {
         // Add new
-        await addExam(SHEET_ID, examData as Omit<Exam, 'id'>);
+        await addExam(SHEET_ID, examData as Omit<Exam, 'id' | 'rowNumber'>);
         toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
       }
       
