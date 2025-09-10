@@ -4,6 +4,8 @@
 import { cookies } from "next/headers";
 
 const SESSION_COOKIE_NAME = "lab_session";
+
+// As variáveis de ambiente são lidas diretamente do processo
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const UBS_PASSWORD = process.env.UBS_PASSWORD;
 
@@ -13,13 +15,16 @@ type LoginResult = {
 }
 
 export async function login(password: string): Promise<LoginResult> {
+  // Verificação explícita para garantir que as senhas foram carregadas do .env
   if (!ADMIN_PASSWORD || !UBS_PASSWORD) {
-    console.error("As variáveis de ambiente ADMIN_PASSWORD e/ou UBS_PASSWORD não estão definidas.");
+    console.error("ERRO CRÍTICO: As variáveis de ambiente ADMIN_PASSWORD e/ou UBS_PASSWORD não foram carregadas. Verifique o arquivo .env na raiz do projeto.");
+    // Retorna um erro genérico para o usuário por segurança
     return { success: false, role: null };
   }
 
   const cookieStore = cookies();
   
+  // Compara a senha fornecida com as senhas carregadas do ambiente
   if (password === ADMIN_PASSWORD) {
     cookieStore.set(SESSION_COOKIE_NAME, "admin", {
       httpOnly: true,
