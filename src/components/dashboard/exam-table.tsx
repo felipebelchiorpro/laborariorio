@@ -48,8 +48,7 @@ export default function ExamTable() {
       if (newFiles.length > 0) {
         const uploadPromises = newFiles.map(async (file) => {
           const arrayBuffer = await file.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          return uploadPdfToDrive(buffer, file.name, file.type);
+          return uploadPdfToDrive(arrayBuffer, file.name, file.type);
         });
         const uploadedLinks = await Promise.all(uploadPromises);
         finalPdfLinks.push(...uploadedLinks);
