@@ -263,14 +263,14 @@ async function getDriveApi() {
     return google.drive({ version: 'v3', auth });
 }
 
-export async function uploadPdfToDrive(arrayBuffer: ArrayBuffer, fileName: string, mimeType: string): Promise<PdfLink> {
+export async function uploadPdfToDrive(base64Data: string, fileName: string, mimeType: string): Promise<PdfLink> {
     const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
     if (!driveFolderId) {
         throw new Error("A variável de ambiente GOOGLE_DRIVE_FOLDER_ID não está definida. Verifique o arquivo .env.");
     }
 
     const drive = await getDriveApi();
-    const fileBuffer = Buffer.from(arrayBuffer);
+    const fileBuffer = Buffer.from(base64Data, 'base64');
 
     try {
         const file = await drive.files.create({

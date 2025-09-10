@@ -11,6 +11,15 @@ import { toast } from "@/hooks/use-toast";
 
 const SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
 
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = error => reject(error);
+  });
+};
+
 export default function ExamTable() {
   const [exams, setExams] = React.useState<Exam[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -47,8 +56,8 @@ export default function ExamTable() {
       const newFiles = values.pdfFiles ? Array.from(values.pdfFiles) : [];
       if (newFiles.length > 0) {
         const uploadPromises = newFiles.map(async (file) => {
-          const arrayBuffer = await file.arrayBuffer();
-          return uploadPdfToDrive(arrayBuffer, file.name, file.type);
+          const base64String = await fileToBase64(file);
+          return uploadPdfToDrive(base64String, file.name, file.type);
         });
         const uploadedLinks = await Promise.all(uploadPromises);
         finalPdfLinks.push(...uploadedLinks);
