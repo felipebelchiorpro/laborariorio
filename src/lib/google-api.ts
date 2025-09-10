@@ -2,9 +2,8 @@
 import { google } from 'googleapis';
 import type { Exam, PdfLink } from './types';
 import { parse, isValid, format } from 'date-fns';
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from './firebase'; // Importa a instância de storage já configurada
 import { randomUUID } from 'crypto';
+import { uploadPdfToCloudinary } from './cloudinary';
 
 const SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
@@ -256,22 +255,6 @@ export async function deleteExam(spreadsheetId: string, id: string) {
   }
 }
 
-// --- Firebase Storage Functions ---
 
-export async function uploadPdfToStorage(base64Data: string, fileName: string, mimeType: string): Promise<PdfLink> {
-    try {
-        const storageRef = ref(storage, `exams/${fileName}-${randomUUID()}`);
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        const snapshot = await uploadBytes(storageRef, buffer, {
-            contentType: mimeType,
-        });
-
-        const downloadURL = await getDownloadURL(snapshot.ref);
-
-        return { url: downloadURL, name: fileName };
-    } catch (error: any) {
-        console.error("[Firebase Storage Error] Falha ao fazer upload do arquivo:", error);
-        throw new Error(`Falha ao fazer upload do PDF para o Storage: ${error.message}`);
-    }
-}
+// Re-export the new upload function for convenience
+export { uploadPdfToCloudinary };
