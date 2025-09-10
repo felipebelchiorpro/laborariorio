@@ -266,7 +266,7 @@ async function getDriveApi() {
 export async function uploadPdfToDrive(arrayBuffer: ArrayBuffer, fileName: string, mimeType: string): Promise<PdfLink> {
     const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
     if (!driveFolderId) {
-        throw new Error("A variável de ambiente GOOGLE_DRIVE_FOLDER_ID não está definida.");
+        throw new Error("A variável de ambiente GOOGLE_DRIVE_FOLDER_ID não está definida. Verifique o arquivo .env.");
     }
 
     const drive = await getDriveApi();
@@ -283,7 +283,7 @@ export async function uploadPdfToDrive(arrayBuffer: ArrayBuffer, fileName: strin
                 mimeType: mimeType,
                 body: Readable.from(fileBuffer),
             },
-            fields: 'id, webContentLink',
+            fields: 'id, webViewLink', // Request webViewLink instead
         });
 
         const fileId = file.data.id;
@@ -299,12 +299,18 @@ export async function uploadPdfToDrive(arrayBuffer: ArrayBuffer, fileName: strin
                 type: 'anyone',
             },
         });
+        
+        // Refetch file metadata to ensure links are available after permission change
+        const updatedFile = await drive.files.get({
+            fileId: fileId,
+            fields: 'webViewLink'
+        });
 
-        if (!file.data.webContentLink) {
-             throw new Error("Falha ao obter o link de download do arquivo.");
+        if (!updatedFile.data.webViewLink) {
+             throw new Error("Falha ao obter o link de visualização do arquivo.");
         }
 
-        return { url: file.data.webContentLink, name: fileName };
+        return { url: updatedFile.data.webViewLink, name: fileName };
     } catch (error: any) {
         console.error("[Drive API Error] Falha ao fazer upload do arquivo:", error);
         throw new Error(`Falha ao fazer upload do PDF para o Drive: ${error.message}`);
