@@ -32,6 +32,7 @@ export default function ExamTable() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingExam, setEditingExam] = React.useState<Exam | null>(null);
+  const formRef = React.useRef<{ resetForm: () => void }>(null);
 
   const fetchExams = React.useCallback(async () => {
     setLoading(true);
@@ -56,6 +57,8 @@ export default function ExamTable() {
 
   const handleAddOrUpdateExam = async (values: PatientFormValues) => {
     setIsSubmitting(true);
+    const isEditing = !!editingExam;
+
     try {
       let finalPdfLinks: PdfLink[] = values.existingPdfLinks || [];
 
@@ -77,7 +80,7 @@ export default function ExamTable() {
         pdfLinks: finalPdfLinks,
       };
 
-      if (editingExam) {
+      if (isEditing) {
         const updatedExam: Exam = { ...editingExam, ...examData };
         await updateExam(SHEET_ID, updatedExam);
         toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
@@ -86,8 +89,15 @@ export default function ExamTable() {
         toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
       }
       
-      setIsFormOpen(false);
-      fetchExams();
+      fetchExams(); // Refresh data in the background
+
+      if (isEditing) {
+        setIsFormOpen(false); // Close dialog only when editing
+        setEditingExam(null);
+      } else {
+        formRef.current?.resetForm(); // Reset form for the next entry
+      }
+
     } catch (error) {
        const errorMessage = (error instanceof Error) ? error.message : "Ocorreu um erro desconhecido.";
        console.error("Failed to save exam:", error);
@@ -98,7 +108,9 @@ export default function ExamTable() {
       })
     } finally {
         setIsSubmitting(false);
-        setEditingExam(null);
+        if (isEditing) {
+          setEditingExam(null);
+        }
     }
   };
 
@@ -148,7 +160,8 @@ export default function ExamTable() {
           <DialogHeader>
             <DialogTitle>{editingExam ? 'Editar Detalhes do Exame' : 'Registrar Novo Paciente'}</DialogTitle>
           </DialogHeader>
-          <PatientForm 
+          <PatientForm
+            ref={formRef}
             exam={editingExam}
             onSubmit={handleAddOrUpdateExam} 
             onDone={handleCloseDialog}

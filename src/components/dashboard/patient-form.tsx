@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam, PdfLink } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
-import { useEffect, useState } from "react"
+import { useEffect, useImperativeHandle, forwardRef } from "react"
 import { Combobox } from "../ui/combobox"
 import { withdrawnByOptions } from "@/lib/data"
 import { Badge } from "../ui/badge"
@@ -60,7 +60,7 @@ interface PatientFormProps {
     isSubmitting?: boolean;
 }
 
-export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFormProps) {
+export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting }: PatientFormProps, ref) => {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,6 +70,22 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
       existingPdfLinks: [],
     },
   })
+
+  const resetForm = () => {
+    form.reset({
+      patientName: "",
+      observations: "",
+      receivedDate: new Date(), // Default to today
+      withdrawnBy: "",
+      pdfFiles: undefined,
+      existingPdfLinks: [],
+    });
+  }
+
+  useImperativeHandle(ref, () => ({
+    resetForm,
+  }));
+
 
   useEffect(() => {
     if (exam) {
@@ -82,14 +98,7 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
         existingPdfLinks: exam.pdfLinks || [],
       });
     } else {
-      form.reset({
-        patientName: "",
-        observations: "",
-        receivedDate: new Date(), // Default to today for new exams
-        withdrawnBy: "",
-        pdfFiles: undefined,
-        existingPdfLinks: [],
-      });
+      resetForm();
     }
   }, [exam, form]);
 
@@ -227,4 +236,6 @@ export function PatientForm({ exam, onSubmit, onDone, isSubmitting }: PatientFor
       </form>
     </Form>
   )
-}
+});
+
+PatientForm.displayName = "PatientForm";
