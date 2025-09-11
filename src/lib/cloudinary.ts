@@ -30,6 +30,7 @@ export async function uploadPdfToCloudinary(base64Data: string, fileName: string
       public_id: publicId, // Use original file name (without extension) as public ID
       access_mode: 'public', // Make the file publicly accessible
       overwrite: true, // Overwrite if a file with the same name exists
+      quality: 'auto:good', // Automatically optimize the PDF for a good quality/size balance
     });
 
     if (!result.secure_url) {
