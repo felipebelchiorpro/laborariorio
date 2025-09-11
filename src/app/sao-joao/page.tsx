@@ -18,6 +18,7 @@ import {
   Search,
   FlaskConical,
   LogOut,
+  ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import ExamTable from '@/components/dashboard/exam-table-sao-joao';
@@ -57,6 +58,14 @@ function SaoJoaoPage() {
                   <Link href="/sao-joao">
                     <Map />
                     Exames de São João
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Relatórios">
+                  <Link href="/relatorios">
+                    <ClipboardList />
+                    Relatórios
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
