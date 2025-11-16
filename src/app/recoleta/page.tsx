@@ -36,7 +36,7 @@ function RecoletaPage() {
     router.push('/login');
   };
 
-  const RECOLETA_SHEET_ID = process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID;
+  const RECOLETA_SHEET_ID = "1OsCAoFjrmZtgKE8FpPjsEhvfpUdV9Sm_fK2T6qZS2Mw";
 
   if (!RECOLETA_SHEET_ID) {
     return (
