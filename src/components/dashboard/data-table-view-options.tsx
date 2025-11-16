@@ -23,7 +23,9 @@ const columnTranslations: { [key: string]: string } = {
   receivedDate: "Data Recebida",
   withdrawnBy: "Retirado Por",
   observations: "OBS",
-  pdfLinks: "PDFs"
+  pdfLinks: "PDFs",
+  ubs: "UBS / Destino",
+  notified: "Avisado"
 };
 
 

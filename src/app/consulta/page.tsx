@@ -1,8 +1,10 @@
+
 import {
   FlaskConical,
   Map,
   Search,
   ClipboardList,
+  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -58,6 +60,14 @@ export default function ConsultaPage() {
                   <Link href="/sao-joao">
                     <Map />
                     Exames de São João
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Recoleta">
+                  <Link href="/recoleta">
+                    <RefreshCw />
+                    Recoleta
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

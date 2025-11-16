@@ -13,3 +13,12 @@ export type Exam = {
   withdrawnBy?: string;
   pdfLinks?: PdfLink[]; // Array of PDF links and names
 };
+
+export type Recoleta = {
+  id: string;
+  rowNumber: number;
+  patientName: string;
+  ubs: string;
+  notified: boolean;
+  observations?: string;
+};

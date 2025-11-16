@@ -19,6 +19,7 @@ import {
   Search,
   LogOut,
   ClipboardList,
+  RefreshCw,
 } from 'lucide-react';
 import ExamTable from '@/components/dashboard/exam-table';
 import Link from 'next/link';
@@ -57,6 +58,14 @@ function Home() {
                   <Link href="/sao-joao">
                     <Map />
                     Exames de São João
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Recoleta">
+                  <Link href="/recoleta">
+                    <RefreshCw />
+                    Recoleta
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

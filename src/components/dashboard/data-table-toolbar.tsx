@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Table } from "@tanstack/react-table"
@@ -18,25 +19,43 @@ export function DataTableToolbar<TData>({
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
+  const hasPatientNameColumn = table.getColumn("patientName");
+  const hasWithdrawnByColumn = table.getColumn("withdrawnBy");
+  const hasUbsColumn = table.getColumn("ubs");
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
-        <Input
-          placeholder="Filtrar por nome do paciente..."
-          value={(table.getColumn("patientName")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("patientName")?.setFilterValue(event.target.value)
-          }
-          className="h-9 w-[150px] lg:w-[250px]"
-        />
-        <Input
-          placeholder="Filtrar por destino..."
-          value={(table.getColumn("withdrawnBy")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("withdrawnBy")?.setFilterValue(event.target.value)
-          }
-          className="h-9 w-[150px] lg:w-[250px]"
-        />
+        {hasPatientNameColumn && (
+          <Input
+            placeholder="Filtrar por nome do paciente..."
+            value={(table.getColumn("patientName")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("patientName")?.setFilterValue(event.target.value)
+            }
+            className="h-9 w-[150px] lg:w-[250px]"
+          />
+        )}
+        {hasWithdrawnByColumn && (
+            <Input
+            placeholder="Filtrar por destino..."
+            value={(table.getColumn("withdrawnBy")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+                table.getColumn("withdrawnBy")?.setFilterValue(event.target.value)
+            }
+            className="h-9 w-[150px] lg:w-[250px]"
+            />
+        )}
+        {hasUbsColumn && (
+            <Input
+            placeholder="Filtrar por UBS..."
+            value={(table.getColumn("ubs")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+                table.getColumn("ubs")?.setFilterValue(event.target.value)
+            }
+            className="h-9 w-[150px] lg:w-[250px]"
+            />
+        )}
         {isFiltered && (
           <Button
             variant="ghost"
@@ -52,7 +71,7 @@ export function DataTableToolbar<TData>({
         <DataTableViewOptions table={table} />
         <Button size="sm" onClick={onAddPatient}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar Paciente
+            Adicionar Registro
         </Button>
       </div>
     </div>

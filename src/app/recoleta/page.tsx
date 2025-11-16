@@ -26,29 +26,35 @@ import { Button } from '@/components/ui/button';
 import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ReportGenerator from '@/components/dashboard/report-generator';
+import RecoletaTable from '@/components/dashboard/recoleta-table';
 
-
-const SAO_LUCAS_SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID;
-const SAO_JOAO_SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID;
-
-
-function RelatoriosPage() {
+function RecoletaPage() {
   const router = useRouter();
 
   const handleSignOut = async () => {
     await signOutUser();
     router.push('/login');
   };
-  
-   if (!SAO_LUCAS_SHEET_ID || !SAO_JOAO_SHEET_ID) {
+
+  const RECOLETA_SHEET_ID = process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID;
+
+  if (!RECOLETA_SHEET_ID) {
     return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <p className="text-red-500">
-                As variáveis de ambiente para os IDs das planilhas não foram configuradas.
-            </p>
+      <div className="flex h-screen w-full flex-col items-center justify-center space-y-4 bg-background p-4 text-center">
+        <div className="rounded-full bg-destructive/10 p-4 text-destructive">
+          <RefreshCw className="h-12 w-12" />
         </div>
+        <h1 className="text-2xl font-bold">Configuração Incompleta</h1>
+        <p className="max-w-md text-muted-foreground">
+          A variável de ambiente{' '}
+          <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
+            NEXT_PUBLIC_RECOLETA_SHEET_ID
+          </code>{' '}
+          não foi definida. Por favor, adicione esta variável no seu ambiente de
+          hospedagem (Coolify) com o ID da planilha do Google Sheets para as
+          recoletas.
+        </p>
+      </div>
     );
   }
 
@@ -78,7 +84,7 @@ function RelatoriosPage() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Recoleta">
+                <SidebarMenuButton asChild tooltip="Recoleta" isActive>
                   <Link href="/recoleta">
                     <RefreshCw />
                     Recoleta
@@ -86,7 +92,7 @@ function RelatoriosPage() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Relatórios" isActive>
+                <SidebarMenuButton asChild tooltip="Relatórios">
                   <Link href="/relatorios">
                     <ClipboardList />
                     Relatórios
@@ -109,7 +115,7 @@ function RelatoriosPage() {
         <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Geração de Relatórios</h1>
+            <h1 className="text-xl font-semibold">Controle de Recoletas</h1>
           </div>
            <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
@@ -117,22 +123,9 @@ function RelatoriosPage() {
           </Button>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <Tabs defaultValue="sao-lucas" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="sao-lucas">Relatório São Lucas</TabsTrigger>
-                <TabsTrigger value="sao-joao">Relatório São João</TabsTrigger>
-              </TabsList>
-              <TabsContent value="sao-lucas">
-                <div className="mt-4">
-                  <ReportGenerator sheetId={SAO_LUCAS_SHEET_ID} reportTitle="Relatório de Exames - São Lucas" />
-                </div>
-              </TabsContent>
-              <TabsContent value="sao-joao">
-                 <div className="mt-4">
-                    <ReportGenerator sheetId={SAO_JOAO_SHEET_ID} reportTitle="Relatório de Exames - São João" />
-                </div>
-              </TabsContent>
-            </Tabs>
+          <div className="mt-4">
+            <RecoletaTable sheetId={RECOLETA_SHEET_ID} />
+          </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
           2025 Todos Direitos Reservados - Grupo Belchior
@@ -142,4 +135,4 @@ function RelatoriosPage() {
   );
 }
 
-export default withAuth(RelatoriosPage);
+export default withAuth(RecoletaPage);

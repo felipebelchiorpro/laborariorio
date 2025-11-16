@@ -19,6 +19,7 @@ import {
   FlaskConical,
   LogOut,
   ClipboardList,
+  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import ExamTable from '@/components/dashboard/exam-table-sao-joao';
@@ -58,6 +59,14 @@ function SaoJoaoPage() {
                   <Link href="/sao-joao">
                     <Map />
                     Exames de São João
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Recoleta">
+                  <Link href="/recoleta">
+                    <RefreshCw />
+                    Recoleta
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
