@@ -74,6 +74,7 @@ export default function RecoletaTable({ sheetId }: RecoletaTableProps) {
 
     } catch (error) {
        const errorMessage = (error instanceof Error) ? error.message : "Ocorreu um erro desconhecido.";
+       console.error("Failed to save recoleta:", error);
        toast({ title: "Erro ao salvar", description: errorMessage, variant: "destructive" });
     } finally {
         setIsSubmitting(false);
@@ -89,6 +90,7 @@ export default function RecoletaTable({ sheetId }: RecoletaTableProps) {
       toast({ title: "Sucesso", description: "Recoleta excluída com sucesso." });
       fetchRecoletas();
     } catch (error) {
+      console.error("Failed to delete recoleta:", error);
       toast({ title: "Erro ao excluir", description: "Não foi possível excluir o item da planilha.", variant: "destructive" });
     }
   };
