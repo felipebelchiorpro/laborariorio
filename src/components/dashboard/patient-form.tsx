@@ -58,9 +58,10 @@ interface PatientFormProps {
     onSubmit: (data: PatientFormValues) => void;
     onDone: () => void;
     isSubmitting?: boolean;
+    hidePdf?: boolean;
 }
 
-export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting }: PatientFormProps, ref) => {
+export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting, hidePdf = false }: PatientFormProps, ref) => {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
