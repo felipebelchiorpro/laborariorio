@@ -1,23 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, Search as SearchIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ComboboxProps {
   options: { label: string; value: string }[]
@@ -39,9 +33,19 @@ export function Combobox({
   className,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [searchValue, setSearchValue] = React.useState("")
 
-  const selectedOption = options.find((option) => option.value.toLowerCase() === value?.toLowerCase());
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(searchValue.toLowerCase())
+  )
+
+  const selectedOption = options.find((opt) => opt.value === value)
+
+  const handleSelect = (selectedValue: string) => {
+    onChange(selectedValue === value ? "" : selectedValue)
+    setOpen(false)
+    setSearchValue("")
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -50,61 +54,57 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
+          className={cn("w-full justify-between active:scale-95 transition-transform", !value && "text-muted-foreground", className)}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-[--radix-popover-trigger-width] p-0"
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerDownOutside={(e) => {
-          if (e.target instanceof Element && e.target.closest('[role="combobox"]')) {
-             e.preventDefault();
-          }
-        }}
-      >
-        <Command>
-          <CommandInput 
-            placeholder={searchPlaceholder} 
-            onValueChange={setSearchQuery}
-          />
-          <CommandList>
-            <CommandEmpty>{notFoundMessage}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onPointerDown={(e) => {
-                    // Force selection on pointer down to bypass cmdk issues
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onChange(option.value === value ? "" : option.value)
-                    setOpen(false)
-                    setSearchQuery("")
-                  }}
-                  onSelect={(v) => {
-                    // Fallback for keyboard navigation
-                    const finalValue = v === value ? "" : v;
-                    onChange(finalValue)
-                    setOpen(false)
-                    setSearchQuery("")
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl border-primary/10">
+        <div className="flex flex-col">
+          <div className="flex items-center border-b px-3 py-2 bg-muted/20">
+            <SearchIcon className="mr-2 h-4 w-4 shrink-0 opacity-50 text-primary" />
+            <Input
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="h-8 w-full border-0 bg-transparent focus-visible:ring-0 px-0"
+              autoFocus
+            />
+          </div>
+          <ScrollArea className="max-h-[300px] overflow-y-auto">
+            <div className="p-1">
+              {filteredOptions.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground italic">
+                  {notFoundMessage}
+                </div>
+              ) : (
+                filteredOptions.map((option) => {
+                  const isActive = value === option.value
+                  return (
+                    <div
+                      key={option.value}
+                      className={cn(
+                        "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 pl-8 pr-2 text-sm outline-none transition-colors hover:bg-primary/10 hover:text-primary",
+                        isActive && "bg-primary/5 text-primary font-semibold"
+                      )}
+                      onMouseDown={(e) => {
+                        // Using onMouseDown to ensure selection happens BEFORE any other blur events
+                        e.preventDefault() 
+                        handleSelect(option.value)
+                      }}
+                    >
+                      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                        {isActive && <Check className="h-4 w-4" />}
+                      </span>
+                      {option.label}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   )
