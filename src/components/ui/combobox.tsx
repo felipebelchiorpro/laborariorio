@@ -56,7 +56,15 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0"
+        onPointerDownOutside={(e) => {
+          // Prevent Dialog from interfering with Popover clicks
+          if (e.target instanceof Element && e.target.closest('[role="combobox"]')) {
+             e.preventDefault();
+          }
+        }}
+      >
         <Command>
           <CommandInput 
             placeholder={searchPlaceholder} 
@@ -69,8 +77,9 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={() => {
-                    onChange(option.value === value ? "" : option.value)
+                  onSelect={(v) => {
+                    const finalValue = v === value ? "" : v;
+                    onChange(finalValue)
                     setOpen(false)
                     setSearchQuery("")
                   }}
