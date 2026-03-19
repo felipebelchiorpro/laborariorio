@@ -174,11 +174,11 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
       const centerX = pageWidth / 2;
       const finalY = (doc as any).lastAutoTable.finalY || 60;
       doc.setFontSize(10);
-      doc.text(`Caconde, ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`, centerX, finalY + 20, { align: 'center' });
+      doc.text(`Caconde, ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`, 14, finalY + 20);
       
       const signatureY = finalY + 45;
       doc.line(centerX - 40, signatureY, centerX + 40, signatureY); // Centered line
-      doc.text('Assinatura do responsável que recebeu', centerX, signatureY + 5, { align: 'center' });
+      doc.text('Carimbo e Assinatura do responsável', centerX, signatureY + 5, { align: 'center' });
     }
     
     // Footer
