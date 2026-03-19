@@ -39,6 +39,7 @@ export function Combobox({
   className,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
 
   const selectedOption = options.find((option) => option.value.toLowerCase() === value?.toLowerCase());
 
@@ -59,8 +60,7 @@ export function Combobox({
         <Command>
           <CommandInput 
             placeholder={searchPlaceholder} 
-            value={value}
-            onValueChange={onChange}
+            onValueChange={setSearchQuery}
           />
           <CommandList>
             <CommandEmpty>{notFoundMessage}</CommandEmpty>
@@ -69,9 +69,10 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
+                  onSelect={() => {
+                    onChange(option.value === value ? "" : option.value)
                     setOpen(false)
+                    setSearchQuery("")
                   }}
                 >
                   <Check

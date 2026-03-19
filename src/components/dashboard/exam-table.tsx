@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PatientForm, type PatientFormValues } from "./patient-form";
 import { addExam, getExams, updateExam, deleteExam, uploadPdfToCloudinary } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface ExamTableProps {
   sheetId: string;
@@ -39,6 +40,11 @@ export default function ExamTable({ sheetId, unitName = "Geral", hidePdf = false
   const formRef = React.useRef<{ resetForm: () => void }>(null);
 
   const fetchExams = React.useCallback(async () => {
+    if (!sheetId) {
+      console.warn(`Attempted to fetch exams for ${unitName} without a sheetId.`);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await getExams(sheetId);
@@ -53,13 +59,21 @@ export default function ExamTable({ sheetId, unitName = "Geral", hidePdf = false
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sheetId, unitName]);
 
   React.useEffect(() => {
     fetchExams();
   }, [fetchExams]);
 
   const handleAddOrUpdateExam = async (values: PatientFormValues) => {
+    if (!sheetId) {
+        toast({
+            title: "Erro de Configuração",
+            description: "O ID da planilha não foi encontrado. Verifique as variáveis de ambiente.",
+            variant: "destructive"
+        });
+        return;
+    }
     setIsSubmitting(true);
     const isEditing = !!editingExam;
 
@@ -78,7 +92,7 @@ export default function ExamTable({ sheetId, unitName = "Geral", hidePdf = false
 
       const examData: Partial<Exam> = {
         patientName: values.patientName,
-        receivedDate: values.receivedDate?.toISOString(),
+        receivedDate: values.receivedDate ? format(values.receivedDate, 'yyyy-MM-dd') : undefined,
         withdrawnBy: values.withdrawnBy,
         observations: values.observations,
         pdfLinks: finalPdfLinks,

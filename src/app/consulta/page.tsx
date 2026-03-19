@@ -1,145 +1,42 @@
 'use client';
 
-import {
-  FlaskConical,
-  Map,
-  Search,
-  ClipboardList,
-  RefreshCw,
-} from 'lucide-react';
-import Link from 'next/link';
-
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReadOnlyExamTable from '@/components/dashboard/read-only-exam-table';
+import withAuth from '@/components/auth/with-auth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DashboardLayout from '@/components/dashboard/dashboard-layout';
 
-const SAO_LUCAS_SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID;
-const SAO_JOAO_SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID;
-const FICHARIO_SHEET_ID = process.env.NEXT_PUBLIC_FICHARIO_SHEET_ID;
+const SAO_LUCAS_SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
+const SAO_JOAO_SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID!;
+const RECOLETA_SHEET_ID = process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID!;
+const FICHARIO_SHEET_ID = process.env.NEXT_PUBLIC_FICHARIO_SHEET_ID!;
 
-export default function ConsultaPage() {
-  if (!SAO_LUCAS_SHEET_ID || !SAO_JOAO_SHEET_ID) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <p className="text-red-500">
-                As variáveis de ambiente para os IDs das planilhas não foram configuradas.
-            </p>
-        </div>
-    );
-  }
-
+function ConsultaPage() {
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="flex-row items-center gap-2 p-4">
-            <span className="font-poppins text-lg font-semibold">Laboratório Caconde</span>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Exames do São Lucas">
-                  <Link href="/">
-                    <FlaskConical />
-                    Exames do São Lucas
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Exames de São João">
-                  <Link href="/sao-joao">
-                    <Map />
-                    Exames de São João
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Fichário">
-                  <Link href="/fichario">
-                    <RefreshCw className="rotate-90" />
-                    Fichário
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Recoleta">
-                  <Link href="/recoleta">
-                    <RefreshCw />
-                    Recoleta
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Relatórios">
-                  <Link href="/relatorios">
-                    <ClipboardList />
-                    Relatórios
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Consulta Pública" isActive>
-                  <Link href="/consulta">
-                    <Search />
-                    Consulta Pública
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
-          <div className="flex items-center gap-4">
-            <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Consulta Pública de Exames</h1>
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <Tabs defaultValue="sao-lucas" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="sao-lucas">Exames São Lucas</TabsTrigger>
-                <TabsTrigger value="sao-joao">Exames São João</TabsTrigger>
-                <TabsTrigger value="fichario">Exames Fichário</TabsTrigger>
-              </TabsList>
-              <TabsContent value="sao-lucas">
-                <div className="mt-4">
-                   <ReadOnlyExamTable sheetId={SAO_LUCAS_SHEET_ID} />
-                </div>
-              </TabsContent>
-              <TabsContent value="sao-joao">
-                 <div className="mt-4">
-                   <ReadOnlyExamTable sheetId={SAO_JOAO_SHEET_ID} />
-                </div>
-              </TabsContent>
-              <TabsContent value="fichario">
-                 <div className="mt-4">
-                   {FICHARIO_SHEET_ID ? (
-                     <ReadOnlyExamTable sheetId={FICHARIO_SHEET_ID} />
-                   ) : (
-                     <p className="text-muted-foreground text-center py-8">Planilha do Fichário não configurada.</p>
-                   )}
-                </div>
-              </TabsContent>
-            </Tabs>
-        </main>
-        <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-          2025 Todos Direitos Reservados - Grupo Belchior
-        </footer>
-      </SidebarInset>
-    </SidebarProvider>
+    <DashboardLayout title="Consulta Pública de Resultados">
+      <div className="mt-4">
+        <Tabs defaultValue="sao-lucas" className="w-full">
+            <TabsList className="mb-6 grid w-full grid-cols-4 bg-muted/50 p-1">
+                <TabsTrigger value="sao-lucas" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all">São Lucas</TabsTrigger>
+                <TabsTrigger value="sao-joao" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white transition-all">São João</TabsTrigger>
+                <TabsTrigger value="fichario" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white transition-all">Fichário</TabsTrigger>
+                <TabsTrigger value="recoleta" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all">Recoleta</TabsTrigger>
+            </TabsList>
+            <TabsContent value="sao-lucas">
+                <ReadOnlyExamTable sheetId={SAO_LUCAS_SHEET_ID} unitName="São Lucas" />
+            </TabsContent>
+            <TabsContent value="sao-joao">
+                <ReadOnlyExamTable sheetId={SAO_JOAO_SHEET_ID} unitName="São João" />
+            </TabsContent>
+            <TabsContent value="fichario">
+                <ReadOnlyExamTable sheetId={FICHARIO_SHEET_ID} unitName="Fichário" />
+            </TabsContent>
+            <TabsContent value="recoleta">
+                <ReadOnlyExamTable sheetId={RECOLETA_SHEET_ID} unitName="Recoleta" />
+            </TabsContent>
+        </Tabs>
+      </div>
+    </DashboardLayout>
   );
 }
+
+export default withAuth(ConsultaPage);

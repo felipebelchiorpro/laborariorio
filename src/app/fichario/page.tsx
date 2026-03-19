@@ -1,137 +1,33 @@
 'use client';
 
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarInset,
-  SidebarTrigger,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroup,
-} from '@/components/ui/sidebar';
-import {
-  Map,
-  Search,
-  FlaskConical,
-  LogOut,
-  ClipboardList,
-  RefreshCw,
-} from 'lucide-react';
-import Link from 'next/link';
 import ExamTable from '@/components/dashboard/exam-table';
-import { Button } from '@/components/ui/button';
-import { signOutUser } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
+import DashboardLayout from '@/components/dashboard/dashboard-layout';
 
 const FICHARIO_SHEET_ID = process.env.NEXT_PUBLIC_FICHARIO_SHEET_ID!;
 
 function FicharioPage() {
-  const router = useRouter();
-
-  const handleSignOut = async () => {
-    await signOutUser();
-    router.push('/login');
-  };
-
   if (!FICHARIO_SHEET_ID) {
     return (
-        <div className="flex h-screen w-full items-center justify-center flex-col gap-4">
-            <p className="text-red-500 font-semibold">
-                Variável NEXT_PUBLIC_FICHARIO_SHEET_ID não configurada.
-            </p>
-            <p className="text-sm text-muted-foreground">
-                Por favor, adicione o ID da planilha do Fichário nas configurações do Vercel.
-            </p>
-        </div>
+        <DashboardLayout title="Fichário">
+            <div className="flex h-[400px] w-full items-center justify-center flex-col gap-4 bg-muted/20 rounded-xl border-2 border-dashed border-red-200">
+                <p className="text-red-500 font-semibold text-lg">
+                    Configuração Incompleta
+                </p>
+                <p className="text-muted-foreground max-w-sm text-center">
+                    A variável <code>NEXT_PUBLIC_FICHARIO_SHEET_ID</code> não foi configurada na Vercel ou no arquivo .env.local.
+                </p>
+            </div>
+        </DashboardLayout>
     );
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="flex-row items-center gap-2 p-4">
-            <span className="font-poppins text-lg font-semibold">Laboratório Caconde</span>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Exames do São Lucas">
-                  <Link href="/">
-                    <FlaskConical />
-                    Exames do São Lucas
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Exames de São João">
-                  <Link href="/sao-joao">
-                    <Map />
-                    Exames de São João
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Fichário" isActive>
-                  <Link href="/fichario">
-                    <RefreshCw className="rotate-90" />
-                    Fichário
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Recoleta">
-                  <Link href="/recoleta">
-                    <RefreshCw />
-                    Recoleta
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Relatórios">
-                  <Link href="/relatorios">
-                    <ClipboardList />
-                    Relatórios
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Consulta Pública">
-                  <Link href="/consulta">
-                    <Search />
-                    Consulta Pública
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex h-16 w-full items-center justify-between border-b bg-card px-4 md:px-6">
-          <div className="flex items-center gap-4">
-            <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-semibold">Controle do Fichário</h1>
-          </div>
-           <Button variant="outline" size="sm" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="mt-4">
+    <DashboardLayout title="Gestão de Fichário">
+        <div className="grid gap-6">
             <ExamTable sheetId={FICHARIO_SHEET_ID} unitName="Fichário" hidePdf={true} />
-          </div>
-        </main>
-        <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-          2025 Todos Direitos Reservados - Grupo Belchior
-        </footer>
-      </SidebarInset>
-    </SidebarProvider>
+        </div>
+    </DashboardLayout>
   );
 }
 

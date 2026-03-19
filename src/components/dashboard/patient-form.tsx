@@ -17,11 +17,14 @@ import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
 import type { Exam, PdfLink } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
-import { useEffect, useImperativeHandle, forwardRef } from "react"
+import * as React from "react"
+import { useEffect, useImperativeHandle, forwardRef, useState } from "react"
 import { Combobox } from "../ui/combobox"
 import { withdrawnByOptions } from "@/lib/data"
 import { Badge } from "../ui/badge"
 import { X } from "lucide-react"
+import { Checkbox } from "../ui/checkbox"
+import { Label } from "../ui/label"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
@@ -62,6 +65,7 @@ interface PatientFormProps {
 }
 
 export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting, hidePdf = false }: PatientFormProps, ref) => {
+  const [keepPersistent, setKeepPersistent] = useState(false);
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -73,11 +77,12 @@ export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting, h
   })
 
   const resetForm = () => {
+    const currentValues = form.getValues();
     form.reset({
       patientName: "",
       observations: "",
-      receivedDate: new Date(), // Default to today
-      withdrawnBy: "",
+      receivedDate: keepPersistent ? currentValues.receivedDate : new Date(),
+      withdrawnBy: keepPersistent ? currentValues.withdrawnBy : "",
       pdfFiles: undefined,
       existingPdfLinks: [],
     });
@@ -90,10 +95,20 @@ export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting, h
 
   useEffect(() => {
     if (exam) {
+      // Use YYYY-MM-DD and add a time component to avoid timezone shifts during parsing
+      let dateValue: Date | undefined = undefined;
+      if (exam.receivedDate) {
+        if (exam.receivedDate.includes('T')) {
+          dateValue = new Date(exam.receivedDate);
+        } else {
+          dateValue = new Date(`${exam.receivedDate}T12:00:00`);
+        }
+      }
+
       form.reset({
         patientName: exam.patientName,
         observations: exam.observations,
-        receivedDate: exam.receivedDate ? new Date(exam.receivedDate) : undefined,
+        receivedDate: dateValue,
         withdrawnBy: exam.withdrawnBy,
         pdfFiles: undefined,
         existingPdfLinks: exam.pdfLinks || [],
@@ -231,6 +246,17 @@ export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting, h
             )}
           />
         )}
+
+        <div className="flex items-center space-x-2 bg-muted/30 p-2 rounded-md border border-dashed border-primary/20">
+          <Checkbox 
+            id="keep-values" 
+            checked={keepPersistent} 
+            onCheckedChange={(checked) => setKeepPersistent(!!checked)} 
+          />
+          <Label htmlFor="keep-values" className="text-sm font-medium cursor-pointer">
+            Manter Setor e Data (Agilizar Inserção)
+          </Label>
+        </div>
 
         <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>Cancelar</Button>

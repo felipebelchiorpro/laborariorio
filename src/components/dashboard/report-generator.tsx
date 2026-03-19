@@ -33,6 +33,7 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
   const [withdrawnBy, setWithdrawnBy] = useState<string>('');
 
   const fetchExams = useCallback(async () => {
+    if (!sheetId) return;
     setLoading(true);
     try {
       const data = await getExams(sheetId);
@@ -77,7 +78,7 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
     });
 
     setFilteredExams(exams);
-  }, [allExams, dateRange, withdrawnBy]);
+  }, [allExams, dateRange, withdrawnBy, sheetId]);
   
   useEffect(() => {
     applyFilters();
