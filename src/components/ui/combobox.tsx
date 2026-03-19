@@ -58,8 +58,8 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent 
         className="w-[--radix-popover-trigger-width] p-0"
+        onPointerDown={(e) => e.stopPropagation()}
         onPointerDownOutside={(e) => {
-          // Prevent Dialog from interfering with Popover clicks
           if (e.target instanceof Element && e.target.closest('[role="combobox"]')) {
              e.preventDefault();
           }
@@ -77,7 +77,16 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.value}
+                  onPointerDown={(e) => {
+                    // Force selection on pointer down to bypass cmdk issues
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onChange(option.value === value ? "" : option.value)
+                    setOpen(false)
+                    setSearchQuery("")
+                  }}
                   onSelect={(v) => {
+                    // Fallback for keyboard navigation
                     const finalValue = v === value ? "" : v;
                     onChange(finalValue)
                     setOpen(false)
