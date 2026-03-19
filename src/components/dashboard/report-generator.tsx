@@ -100,17 +100,23 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
     
     if (isSaoJoao) {
       try {
-        // Logo
-        doc.addImage('/logoprefeitura.png', 'PNG', 14, 10, 25, 25);
-        doc.setFontSize(18);
-        doc.text('Prefeitura Municipal de Caconde', 45, 22);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const centerX = pageWidth / 2;
+        
+        // Logo Centered
+        doc.addImage('/logoprefeitura.png', 'PNG', centerX - 12.5, 10, 25, 25);
+        
         doc.setFontSize(14);
-        doc.text(reportTitle, 45, 30);
+        doc.text('Prefeitura Municipal de Caconde', centerX, 42, { align: 'center' } );
+        
         doc.setFontSize(11);
+        doc.text(reportTitle, centerX, 48, { align: 'center' } );
+        
+        doc.setFontSize(9);
         const dateFrom = dateRange?.from ? format(dateRange.from, 'dd/MM/yyyy') : 'N/A';
         const dateTo = dateRange?.to ? format(dateRange.to, 'dd/MM/yyyy') : 'N/A';
-        doc.text(`Período: ${dateFrom} a ${dateTo}`, 45, 36);
-        doc.text(`Setor: ${withdrawnByOptions.find(opt => opt.value === withdrawnBy)?.label || 'Todos'}`, 45, 42);
+        const sectorLabel = withdrawnByOptions.find(opt => opt.value === withdrawnBy)?.label || 'Todos';
+        doc.text(`Período: ${dateFrom} a ${dateTo} | Setor: ${sectorLabel}`, centerX, 54, { align: 'center' });
       } catch (e) {
         // Fallback if logo fails
         doc.setFontSize(18);
@@ -137,7 +143,7 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
 
     // Table
     autoTable(doc, {
-      startY: isSaoJoao ? 55 : 50,
+      startY: isSaoJoao ? 60 : 50,
       head: [['Paciente', 'Data Recebida', 'Retirado Por / Destino']],
       body: filteredExams.map(exam => [
         exam.patientName,
@@ -157,23 +163,22 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
       },
       styles: {
         font: 'helvetica',
-        fontSize: 10,
+        fontSize: isSaoJoao ? 9 : 10,
         cellPadding: 4
       }
     });
 
     // Signature block for São João
     if (isSaoJoao) {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const centerX = pageWidth / 2;
       const finalY = (doc as any).lastAutoTable.finalY || 60;
       doc.setFontSize(10);
-      doc.text(`Caconde, ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`, 14, finalY + 20);
+      doc.text(`Caconde, ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`, centerX, finalY + 20, { align: 'center' });
       
       const signatureY = finalY + 45;
-      doc.line(14, signatureY, 100, signatureY); // Signature line
-      doc.text('Assinatura do responsável que recebeu', 14, signatureY + 5);
-      
-      doc.line(120, signatureY, 180, signatureY); // Date/Time of reception line
-      doc.text('Data e Hora do recebimento', 120, signatureY + 5);
+      doc.line(centerX - 40, signatureY, centerX + 40, signatureY); // Centered line
+      doc.text('Assinatura do responsável que recebeu', centerX, signatureY + 5, { align: 'center' });
     }
     
     // Footer
