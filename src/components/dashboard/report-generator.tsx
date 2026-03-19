@@ -95,23 +95,49 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
 
     const doc = new jsPDF();
     
-    // Header
-    doc.setFontSize(18);
-    doc.text(reportTitle, 14, 22);
-    doc.setFontSize(11);
-    const dateFrom = dateRange?.from ? format(dateRange.from, 'dd/MM/yyyy') : 'N/A';
-    const dateTo = dateRange?.to ? format(dateRange.to, 'dd/MM/yyyy') : 'N/A';
-    doc.text(`Período: ${dateFrom} a ${dateTo}`, 14, 30);
-    doc.text(`Setor: ${withdrawnByOptions.find(opt => opt.value === withdrawnBy)?.label || 'Todos'}`, 14, 36);
+    // Logo and Header for São João
+    const isSaoJoao = reportTitle.toLowerCase().includes('são joão');
+    
+    if (isSaoJoao) {
+      try {
+        // Logo
+        doc.addImage('/logoprefeitura.png', 'PNG', 14, 10, 25, 25);
+        doc.setFontSize(18);
+        doc.text('Prefeitura Municipal de Caconde', 45, 22);
+        doc.setFontSize(14);
+        doc.text(reportTitle, 45, 30);
+        doc.setFontSize(11);
+        const dateFrom = dateRange?.from ? format(dateRange.from, 'dd/MM/yyyy') : 'N/A';
+        const dateTo = dateRange?.to ? format(dateRange.to, 'dd/MM/yyyy') : 'N/A';
+        doc.text(`Período: ${dateFrom} a ${dateTo}`, 45, 36);
+        doc.text(`Setor: ${withdrawnByOptions.find(opt => opt.value === withdrawnBy)?.label || 'Todos'}`, 45, 42);
+      } catch (e) {
+        // Fallback if logo fails
+        doc.setFontSize(18);
+        doc.text(reportTitle, 14, 22);
+        doc.setFontSize(11);
+        const dateFrom = dateRange?.from ? format(dateRange.from, 'dd/MM/yyyy') : 'N/A';
+        const dateTo = dateRange?.to ? format(dateRange.to, 'dd/MM/yyyy') : 'N/A';
+        doc.text(`Período: ${dateFrom} a ${dateTo}`, 14, 30);
+        doc.text(`Setor: ${withdrawnByOptions.find(opt => opt.value === withdrawnBy)?.label || 'Todos'}`, 14, 36);
+      }
+    } else {
+      doc.setFontSize(18);
+      doc.text(reportTitle, 14, 22);
+      doc.setFontSize(11);
+      const dateFrom = dateRange?.from ? format(dateRange.from, 'dd/MM/yyyy') : 'N/A';
+      const dateTo = dateRange?.to ? format(dateRange.to, 'dd/MM/yyyy') : 'N/A';
+      doc.text(`Período: ${dateFrom} a ${dateTo}`, 14, 30);
+      doc.text(`Setor: ${withdrawnByOptions.find(opt => opt.value === withdrawnBy)?.label || 'Todos'}`, 14, 36);
+    }
 
 
     // Custom styling for São João
-    const isSaoJoao = reportTitle.toLowerCase().includes('são joão');
     const headerColor = isSaoJoao ? [33, 47, 61] : [41, 128, 185]; // Dark Navy vs Standard Blue
 
     // Table
     autoTable(doc, {
-      startY: 50,
+      startY: isSaoJoao ? 55 : 50,
       head: [['Paciente', 'Data Recebida', 'Retirado Por / Destino']],
       body: filteredExams.map(exam => [
         exam.patientName,
@@ -135,6 +161,20 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
         cellPadding: 4
       }
     });
+
+    // Signature block for São João
+    if (isSaoJoao) {
+      const finalY = (doc as any).lastAutoTable.finalY || 60;
+      doc.setFontSize(10);
+      doc.text(`Caconde, ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`, 14, finalY + 20);
+      
+      const signatureY = finalY + 45;
+      doc.line(14, signatureY, 100, signatureY); // Signature line
+      doc.text('Assinatura do responsável que recebeu', 14, signatureY + 5);
+      
+      doc.line(120, signatureY, 180, signatureY); // Date/Time of reception line
+      doc.text('Data e Hora do recebimento', 120, signatureY + 5);
+    }
     
     // Footer
     const pageCount = (doc as any).internal.getNumberOfPages();
