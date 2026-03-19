@@ -180,52 +180,56 @@ export const PatientForm = forwardRef(({ exam, onSubmit, onDone, isSubmitting }:
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="pdfFiles"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Anexar Novos PDFs</FormLabel>
-              <FormControl>
-                <Input type="file" accept="application/pdf" {...pdfFileRef} disabled={isSubmitting} multiple />
-              </FormControl>
-              <FormDescription>
-                Adicione novos arquivos. Para remover um anexo existente, clique no "X" ao lado dele.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!hidePdf && (
+          <FormField
+            control={form.control}
+            name="pdfFiles"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Anexar Novos PDFs</FormLabel>
+                <FormControl>
+                  <Input type="file" accept="application/pdf" {...pdfFileRef} disabled={isSubmitting} multiple />
+                </FormControl>
+                <FormDescription>
+                  Adicione novos arquivos. Para remover um anexo existente, clique no "X" ao lado dele.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
-        <FormField
-          control={form.control}
-          name="existingPdfLinks"
-          render={({ field }) => (
-             <FormItem>
-                {field.value && field.value.length > 0 && (
-                    <FormLabel>PDFs Anexados</FormLabel>
-                )}
-                <div className="flex flex-wrap gap-2">
-                {field.value?.map((pdf, index) => (
-                    <Badge key={index} variant="secondary" className="pl-2 pr-1 flex items-center gap-1">
-                    <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="mr-1 hover:underline">
-                        {pdf.name}
-                    </a>
-                    <button
-                        type="button"
-                        onClick={() => handleRemovePdf(pdf.url)}
-                        className="rounded-full hover:bg-muted-foreground/20 p-0.5 disabled:pointer-events-none"
-                        aria-label={`Remover ${pdf.name}`}
-                        disabled={isSubmitting}
-                    >
-                        <X className="h-3 w-3" />
-                    </button>
-                    </Badge>
-                ))}
-                </div>
-            </FormItem>
-          )}
-        />
+        {!hidePdf && (
+          <FormField
+            control={form.control}
+            name="existingPdfLinks"
+            render={({ field }) => (
+               <FormItem>
+                  {field.value && field.value.length > 0 && (
+                      <FormLabel>PDFs Anexados</FormLabel>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                  {field.value?.map((pdf, index) => (
+                      <Badge key={index} variant="secondary" className="pl-2 pr-1 flex items-center gap-1">
+                      <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="mr-1 hover:underline">
+                          {pdf.name}
+                      </a>
+                      <button
+                          type="button"
+                          onClick={() => handleRemovePdf(pdf.url)}
+                          className="rounded-full hover:bg-muted-foreground/20 p-0.5 disabled:pointer-events-none"
+                          aria-label={`Remover ${pdf.name}`}
+                          disabled={isSubmitting}
+                      >
+                          <X className="h-3 w-3" />
+                      </button>
+                      </Badge>
+                  ))}
+                  </div>
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>Cancelar</Button>

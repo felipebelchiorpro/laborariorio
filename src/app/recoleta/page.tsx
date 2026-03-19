@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -84,6 +83,14 @@ function RecoletaPage() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Fichário">
+                  <Link href="/fichario">
+                    <RefreshCw className="rotate-90" />
+                    Fichário
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Recoleta" isActive>
                   <Link href="/recoleta">
                     <RefreshCw />
@@ -99,7 +106,7 @@ function RecoletaPage() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-               <SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Consulta Pública">
                   <Link href="/consulta">
                     <Search />

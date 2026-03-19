@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -32,6 +31,7 @@ import ReportGenerator from '@/components/dashboard/report-generator';
 
 const SAO_LUCAS_SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID;
 const SAO_JOAO_SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID;
+const FICHARIO_SHEET_ID = process.env.NEXT_PUBLIC_FICHARIO_SHEET_ID;
 
 
 function RelatoriosPage() {
@@ -78,6 +78,14 @@ function RelatoriosPage() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Fichário">
+                  <Link href="/fichario">
+                    <RefreshCw className="rotate-90" />
+                    Fichário
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Recoleta">
                   <Link href="/recoleta">
                     <RefreshCw />
@@ -118,9 +126,10 @@ function RelatoriosPage() {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <Tabs defaultValue="sao-lucas" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="sao-lucas">Relatório São Lucas</TabsTrigger>
                 <TabsTrigger value="sao-joao">Relatório São João</TabsTrigger>
+                <TabsTrigger value="fichario">Relatório Fichário</TabsTrigger>
               </TabsList>
               <TabsContent value="sao-lucas">
                 <div className="mt-4">
@@ -130,6 +139,15 @@ function RelatoriosPage() {
               <TabsContent value="sao-joao">
                  <div className="mt-4">
                     <ReportGenerator sheetId={SAO_JOAO_SHEET_ID} reportTitle="Relatório de Exames - São João" />
+                </div>
+              </TabsContent>
+              <TabsContent value="fichario">
+                <div className="mt-4">
+                  {FICHARIO_SHEET_ID ? (
+                    <ReportGenerator sheetId={FICHARIO_SHEET_ID} reportTitle="Relatório de Exames - Fichário" />
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">Variável do Fichário não configurada.</p>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

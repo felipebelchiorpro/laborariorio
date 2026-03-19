@@ -9,7 +9,11 @@ import { PatientForm, type PatientFormValues } from "./patient-form";
 import { addExam, getExams, updateExam, deleteExam, uploadPdfToCloudinary } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
 
-const SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
+interface ExamTableProps {
+  sheetId: string;
+  unitName?: string;
+  hidePdf?: boolean;
+}
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -26,7 +30,7 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-export default function ExamTable() {
+export default function ExamTable({ sheetId, unitName = "Geral", hidePdf = false }: ExamTableProps) {
   const [exams, setExams] = React.useState<Exam[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -37,10 +41,10 @@ export default function ExamTable() {
   const fetchExams = React.useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getExams(SHEET_ID);
+      const data = await getExams(sheetId);
       setExams(data);
     } catch (error) {
-      console.error("Failed to fetch exams:", error);
+      console.error(`Failed to fetch exams for ${unitName}:`, error);
       toast({
         title: "Erro ao buscar exames",
         description: "Não foi possível carregar os dados da planilha. Tente novamente mais tarde.",
@@ -81,11 +85,13 @@ export default function ExamTable() {
       };
 
       if (isEditing) {
+        // Update
         const updatedExam: Exam = { ...editingExam, ...examData };
-        await updateExam(SHEET_ID, updatedExam);
+        await updateExam(sheetId, updatedExam);
         toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
       } else {
-        await addExam(SHEET_ID, examData as Omit<Exam, 'id' | 'rowNumber'>);
+        // Add new
+        await addExam(sheetId, examData as Omit<Exam, 'id' | 'rowNumber'>);
         toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
       }
       
@@ -116,11 +122,11 @@ export default function ExamTable() {
 
   const handleDeleteExam = async (examToDelete: Exam) => {
     try {
-      await deleteExam(SHEET_ID, examToDelete.id);
+      await deleteExam(sheetId, examToDelete.id);
       toast({ title: "Sucesso", description: "Exame excluído com sucesso." });
       fetchExams(); // Refresh data
     } catch (error) {
-      console.error("Failed to delete exam:", error);
+      console.error(`Failed to delete exam for ${unitName}:`, error);
       toast({
         title: "Erro ao excluir",
         description: "Não foi possível excluir o exame da planilha.",
@@ -166,6 +172,7 @@ export default function ExamTable() {
             onSubmit={handleAddOrUpdateExam} 
             onDone={handleCloseDialog}
             isSubmitting={isSubmitting} 
+            hidePdf={hidePdf}
           />
         </DialogContent>
       </Dialog>

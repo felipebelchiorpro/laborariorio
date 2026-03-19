@@ -105,6 +105,10 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
     doc.text(`Setor: ${withdrawnByOptions.find(opt => opt.value === withdrawnBy)?.label || 'Todos'}`, 14, 36);
 
 
+    // Custom styling for São João
+    const isSaoJoao = reportTitle.toLowerCase().includes('são joão');
+    const headerColor = isSaoJoao ? [33, 47, 61] : [41, 128, 185]; // Dark Navy vs Standard Blue
+
     // Table
     autoTable(doc, {
       startY: 50,
@@ -114,8 +118,22 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
         exam.receivedDate ? format(new Date(exam.receivedDate), 'dd/MM/yyyy') : 'N/A',
         exam.withdrawnBy || '',
       ]),
-      theme: 'striped',
-      headStyles: { fillColor: [41, 128, 185] },
+      theme: isSaoJoao ? 'grid' : 'striped',
+      headStyles: { 
+        fillColor: headerColor as [number, number, number],
+        fontSize: 12,
+        halign: 'center'
+      },
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { halign: 'center', cellWidth: 40 },
+        2: { cellWidth: 60 }
+      },
+      styles: {
+        font: 'helvetica',
+        fontSize: 10,
+        cellPadding: 4
+      }
     });
     
     // Footer

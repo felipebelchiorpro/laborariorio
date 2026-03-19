@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -22,12 +21,13 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
-import ExamTable from '@/components/dashboard/exam-table-sao-joao';
+import ExamTable from '@/components/dashboard/exam-table';
 import { Button } from '@/components/ui/button';
 import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
 
+const SAO_JOAO_SHEET_ID = process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID!;
 
 function SaoJoaoPage() {
   const router = useRouter();
@@ -63,6 +63,14 @@ function SaoJoaoPage() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Fichário">
+                  <Link href="/fichario">
+                    <RefreshCw className="rotate-90" />
+                    Fichário
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Recoleta">
                   <Link href="/recoleta">
                     <RefreshCw />
@@ -78,7 +86,7 @@ function SaoJoaoPage() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-               <SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Consulta Pública">
                   <Link href="/consulta">
                     <Search />
@@ -103,7 +111,7 @@ function SaoJoaoPage() {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="mt-4">
-            <ExamTable />
+            <ExamTable sheetId={SAO_JOAO_SHEET_ID} unitName="São João" />
           </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">

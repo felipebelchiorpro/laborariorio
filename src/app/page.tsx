@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -27,6 +26,8 @@ import { Button } from '@/components/ui/button';
 import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
+
+const SAO_LUCAS_SHEET_ID = process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID!;
 
 function Home() {
   const router = useRouter();
@@ -58,6 +59,14 @@ function Home() {
                   <Link href="/sao-joao">
                     <Map />
                     Exames de São João
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Fichário">
+                  <Link href="/fichario">
+                    <RefreshCw className="rotate-90" />
+                    Fichário
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -102,7 +111,7 @@ function Home() {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="mt-4">
-            <ExamTable />
+            <ExamTable sheetId={SAO_LUCAS_SHEET_ID} unitName="São Lucas" />
           </div>
         </main>
         <footer className="border-t p-4 text-center text-sm text-muted-foreground">
