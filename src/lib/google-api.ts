@@ -4,6 +4,7 @@ import type { Exam, PdfLink, Recoleta } from './types';
 import { parse, isValid, format } from 'date-fns';
 import { randomUUID } from 'crypto';
 import { uploadPdfToCloudinary } from './cloudinary';
+import { unstable_noStore as noStore } from 'next/cache';
 
 const SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
@@ -207,6 +208,7 @@ async function deleteRow(spreadsheetId: string, id: string, sheetName: string, i
 // --- Funções de Exame ---
 
 export async function getExams(spreadsheetId: string, sheetName: string): Promise<Exam[]> {
+  noStore();
   if (!spreadsheetId) return [];
   try {
     const sheets = await getSheetsApi();
@@ -255,6 +257,7 @@ export async function deleteExam(spreadsheetId: string, sheetName: string, id: s
 // --- Funções de Recoleta ---
 
 export async function getRecoletas(spreadsheetId: string, sheetName: string): Promise<Recoleta[]> {
+    noStore();
     if (!spreadsheetId) return [];
     try {
         const sheets = await getSheetsApi();
