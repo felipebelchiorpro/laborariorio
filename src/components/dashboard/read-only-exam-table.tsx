@@ -32,9 +32,10 @@ import { DataTableViewOptions } from "./data-table-view-options";
 
 interface ReadOnlyExamTableProps {
     sheetId: string;
+    unitName?: string;
 }
 
-export default function ReadOnlyExamTable({ sheetId }: ReadOnlyExamTableProps) {
+export default function ReadOnlyExamTable({ sheetId, unitName = "Geral" }: ReadOnlyExamTableProps) {
   const [exams, setExams] = React.useState<Exam[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -76,7 +77,7 @@ export default function ReadOnlyExamTable({ sheetId }: ReadOnlyExamTableProps) {
   const fetchExams = React.useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getExams(sheetId);
+      const data = await getExams(sheetId, unitName);
       setExams(data);
     } catch (error) {
       console.error("Failed to fetch exams for public view:", error);

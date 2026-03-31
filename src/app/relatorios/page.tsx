@@ -22,16 +22,16 @@ function RelatoriosPage() {
                 <TabsTrigger value="recoleta" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all">Recoleta</TabsTrigger>
             </TabsList>
             <TabsContent value="sao-lucas">
-                <ReportGenerator sheetId={SAO_LUCAS_SHEET_ID} reportTitle="Relatório de Exames - São Lucas" />
+                <ReportGenerator sheetId={SAO_LUCAS_SHEET_ID} unitName="São Lucas" reportTitle="Relatório de Exames - São Lucas" />
             </TabsContent>
             <TabsContent value="sao-joao">
-                <ReportGenerator sheetId={SAO_JOAO_SHEET_ID} reportTitle="Relatório de Exames - São João" />
+                <ReportGenerator sheetId={SAO_JOAO_SHEET_ID} unitName="São João" reportTitle="Relatório de Exames - São João" />
             </TabsContent>
             <TabsContent value="fichario">
-                <ReportGenerator sheetId={FICHARIO_SHEET_ID} reportTitle="Relatório de Exames - Fichário" />
+                <ReportGenerator sheetId={FICHARIO_SHEET_ID} unitName="Fichário" reportTitle="Relatório de Exames - Fichário" />
             </TabsContent>
             <TabsContent value="recoleta">
-                <ReportGenerator sheetId={RECOLETA_SHEET_ID} reportTitle="Relatório de Exames - Recoleta" />
+                <ReportGenerator sheetId={RECOLETA_SHEET_ID} unitName="Recoleta" reportTitle="Relatório de Exames - Recoleta" />
             </TabsContent>
         </Tabs>
       </div>

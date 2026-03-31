@@ -47,7 +47,7 @@ export default function ExamTable({ sheetId, unitName = "Geral", hidePdf = false
     }
     setLoading(true);
     try {
-      const data = await getExams(sheetId);
+      const data = await getExams(sheetId, unitName);
       setExams(data);
     } catch (error) {
       console.error(`Failed to fetch exams for ${unitName}:`, error);
@@ -101,11 +101,11 @@ export default function ExamTable({ sheetId, unitName = "Geral", hidePdf = false
       if (isEditing) {
         // Update
         const updatedExam: Exam = { ...editingExam, ...examData };
-        await updateExam(sheetId, updatedExam);
+        await updateExam(sheetId, unitName, updatedExam);
         toast({ title: "Sucesso", description: "Exame atualizado com sucesso." });
       } else {
         // Add new
-        await addExam(sheetId, examData as Omit<Exam, 'id' | 'rowNumber'>);
+        await addExam(sheetId, unitName, examData as Omit<Exam, 'id' | 'rowNumber'>);
         toast({ title: "Sucesso", description: "Novo exame registrado com sucesso." });
       }
       
@@ -136,7 +136,7 @@ export default function ExamTable({ sheetId, unitName = "Geral", hidePdf = false
 
   const handleDeleteExam = async (examToDelete: Exam) => {
     try {
-      await deleteExam(sheetId, examToDelete.id);
+      await deleteExam(sheetId, unitName, examToDelete.id);
       toast({ title: "Sucesso", description: "Exame excluído com sucesso." });
       fetchExams(); // Refresh data
     } catch (error) {

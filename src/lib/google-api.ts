@@ -155,12 +155,13 @@ async function findRowById(sheets: any, spreadsheetId: string, id: string, range
     return null;
 }
 
-async function deleteRow(spreadsheetId: string, id: string, idColumnRange: string, sheetIndex: number = 0) {
+async function deleteRow(spreadsheetId: string, id: string, sheetName: string, idColumnRange: string) {
   if (!id) {
     throw new Error("O ID é necessário para excluir.");
   }
   const sheets = await getSheetsApi();
-  const rowNumber = await findRowById(sheets, spreadsheetId, id, idColumnRange);
+  const range = `${sheetName}!${idColumnRange}`;
+  const rowNumber = await findRowById(sheets, spreadsheetId, id, range);
 
   if (!rowNumber) {
       console.warn(`Tentativa de exclusão de um item com ID '${id}' que não foi encontrado.`);
@@ -170,13 +171,14 @@ async function deleteRow(spreadsheetId: string, id: string, idColumnRange: strin
   try {
     const sheetIdResponse = await sheets.spreadsheets.get({
       spreadsheetId,
-      fields: 'sheets(properties.sheetId)',
     });
 
-    const sheetId = sheetIdResponse.data.sheets?.[sheetIndex]?.properties?.sheetId;
+    // Find the sheet ID for the specific sheetName
+    const sheet = sheetIdResponse.data.sheets?.find(s => s.properties?.title === sheetName);
+    const sheetNumId = sheet?.properties?.sheetId;
 
-    if (sheetId === null || sheetId === undefined) {
-      throw new Error("Não foi possível encontrar o ID da página da planilha.");
+    if (sheetNumId === null || sheetNumId === undefined) {
+      throw new Error(`Não foi possível encontrar o ID da aba da planilha com o nome '${sheetName}'.`);
     }
 
     await sheets.spreadsheets.batchUpdate({
@@ -186,7 +188,7 @@ async function deleteRow(spreadsheetId: string, id: string, idColumnRange: strin
           {
             deleteDimension: {
               range: {
-                sheetId: sheetId,
+                sheetId: sheetNumId,
                 dimension: 'ROWS',
                 startIndex: rowNumber - 1,
                 endIndex: rowNumber,
@@ -204,11 +206,12 @@ async function deleteRow(spreadsheetId: string, id: string, idColumnRange: strin
 
 // --- Funções de Exame ---
 
-export async function getExams(spreadsheetId: string): Promise<Exam[]> {
+export async function getExams(spreadsheetId: string, sheetName: string): Promise<Exam[]> {
   if (!spreadsheetId) return [];
   try {
     const sheets = await getSheetsApi();
-    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range: EXAM_SHEETS_RANGE });
+    const range = `${sheetName}!${EXAM_SHEETS_RANGE}`;
+    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
     const rows = response.data.values;
     if (!rows || rows.length <= 1) return [];
     
@@ -221,40 +224,42 @@ export async function getExams(spreadsheetId: string): Promise<Exam[]> {
   }
 }
 
-export async function addExam(spreadsheetId: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
+export async function addExam(spreadsheetId: string, sheetName: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
     const sheets = await getSheetsApi();
     const newId = randomUUID();
     const values = [mapExamToRow({ ...exam, id: newId })];
-    await sheets.spreadsheets.values.append({ spreadsheetId, range: EXAM_SHEETS_RANGE, valueInputOption: 'USER_ENTERED', requestBody: { values } });
+    const range = `${sheetName}!${EXAM_SHEETS_RANGE}`;
+    await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
 }
 
-export async function updateExam(spreadsheetId: string, exam: Exam) {
+export async function updateExam(spreadsheetId: string, sheetName: string, exam: Exam) {
     if (!exam.id) throw new Error("O ID do exame é necessário para atualizar.");
     const sheets = await getSheetsApi();
-    const rowNumber = await findRowById(sheets, spreadsheetId, exam.id, 'A:A');
+    const rowNumber = await findRowById(sheets, spreadsheetId, exam.id, `${sheetName}!A:A`);
 
     if (!rowNumber) {
         console.warn(`Exame com ID ${exam.id} não encontrado. Adicionando como novo.`);
-        await addExam(spreadsheetId, exam);
+        await addExam(spreadsheetId, sheetName, exam);
         return;
     }
 
-    const range = `A${rowNumber}:F${rowNumber}`;
+    const range = `${sheetName}!A${rowNumber}:F${rowNumber}`;
     const values = [mapExamToRow(exam)];
     await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
 }
 
-export async function deleteExam(spreadsheetId: string, id: string) {
-    await deleteRow(spreadsheetId, id, 'A:A');
+export async function deleteExam(spreadsheetId: string, sheetName: string, id: string) {
+    await deleteRow(spreadsheetId, id, sheetName, 'A:A');
 }
 
 // --- Funções de Recoleta ---
 
-export async function getRecoletas(spreadsheetId: string): Promise<Recoleta[]> {
+export async function getRecoletas(spreadsheetId: string, sheetName: string): Promise<Recoleta[]> {
     if (!spreadsheetId) return [];
     try {
         const sheets = await getSheetsApi();
-        const response = await sheets.spreadsheets.values.get({ spreadsheetId, range: RECOLETA_SHEETS_RANGE });
+        const range = `${sheetName}!${RECOLETA_SHEETS_RANGE}`;
+        const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
         const rows = response.data.values;
         if (!rows || rows.length <= 1) return [];
 
@@ -267,31 +272,49 @@ export async function getRecoletas(spreadsheetId: string): Promise<Recoleta[]> {
     }
 }
 
-export async function addRecoleta(spreadsheetId: string, recoleta: Omit<Recoleta, 'id' | 'rowNumber'>) {
-    const sheets = await getSheetsApi();
-    const newId = randomUUID();
-    const values = [mapRecoletaToRow({ ...recoleta, id: newId })];
-    await sheets.spreadsheets.values.append({ spreadsheetId, range: RECOLETA_SHEETS_RANGE, valueInputOption: 'USER_ENTERED', requestBody: { values } });
-}
-
-export async function updateRecoleta(spreadsheetId: string, recoleta: Recoleta) {
-    if (!recoleta.id) throw new Error("O ID da recoleta é necessário para atualizar.");
-    const sheets = await getSheetsApi();
-    const rowNumber = await findRowById(sheets, spreadsheetId, recoleta.id, 'A:A');
-
-    if (!rowNumber) {
-        console.warn(`Recoleta com ID ${recoleta.id} não encontrada. Adicionando como nova.`);
-        await addRecoleta(spreadsheetId, recoleta);
-        return;
+export async function addRecoleta(spreadsheetId: string, sheetName: string, recoleta: Omit<Recoleta, 'id' | 'rowNumber'>) {
+    try {
+        const sheets = await getSheetsApi();
+        const newId = randomUUID();
+        const values = [mapRecoletaToRow({ ...recoleta, id: newId })];
+        const range = `${sheetName}!${RECOLETA_SHEETS_RANGE}`;
+        await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao adicionar recoleta:`, error);
+        return { error: error.message || 'Failed to add data to Google Sheets.' };
     }
-
-    const range = `A${rowNumber}:E${rowNumber}`;
-    const values = [mapRecoletaToRow(recoleta)];
-    await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
 }
 
-export async function deleteRecoleta(spreadsheetId: string, id: string) {
-    await deleteRow(spreadsheetId, id, 'A:A');
+export async function updateRecoleta(spreadsheetId: string, sheetName: string, recoleta: Recoleta) {
+    if (!recoleta.id) return { error: "O ID da recoleta é necessário para atualizar." };
+    try {
+        const sheets = await getSheetsApi();
+        const rowNumber = await findRowById(sheets, spreadsheetId, recoleta.id, `${sheetName}!A:A`);
+
+        if (!rowNumber) {
+            console.warn(`Recoleta com ID ${recoleta.id} não encontrada. Adicionando como nova.`);
+            return await addRecoleta(spreadsheetId, sheetName, recoleta);
+        }
+
+        const range = `${sheetName}!A${rowNumber}:E${rowNumber}`;
+        const values = [mapRecoletaToRow(recoleta)];
+        await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao atualizar recoleta:`, error);
+        return { error: error.message || 'Failed to update data in Google Sheets.' };
+    }
+}
+
+export async function deleteRecoleta(spreadsheetId: string, sheetName: string, id: string) {
+    try {
+        await deleteRow(spreadsheetId, id, sheetName, 'A:A');
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao excluir recoleta:`, error);
+        return { error: error.message || 'Failed to delete data from Google Sheets.' };
+    }
 }
 
 // Re-export the new upload function for convenience

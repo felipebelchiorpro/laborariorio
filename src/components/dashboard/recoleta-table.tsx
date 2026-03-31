@@ -12,9 +12,10 @@ import { getColumns } from "./recoleta-columns";
 
 interface RecoletaTableProps {
     sheetId: string;
+    sheetName?: string;
 }
 
-export default function RecoletaTable({ sheetId }: RecoletaTableProps) {
+export default function RecoletaTable({ sheetId, sheetName = "Recoleta" }: RecoletaTableProps) {
   const [recoletas, setRecoletas] = React.useState<Recoleta[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -25,7 +26,7 @@ export default function RecoletaTable({ sheetId }: RecoletaTableProps) {
   const fetchRecoletas = React.useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getRecoletas(sheetId);
+      const data = await getRecoletas(sheetId, sheetName);
       setRecoletas(data);
     } catch (error) {
       console.error("Failed to fetch recoletas:", error);
@@ -37,7 +38,7 @@ export default function RecoletaTable({ sheetId }: RecoletaTableProps) {
     } finally {
       setLoading(false);
     }
-  }, [sheetId]);
+  }, [sheetId, sheetName]);
 
   React.useEffect(() => {
     fetchRecoletas();
@@ -56,10 +57,12 @@ export default function RecoletaTable({ sheetId }: RecoletaTableProps) {
       };
 
       if (isEditing) {
-        await updateRecoleta(sheetId, { ...editingRecoleta, ...recoletaData });
+        const res = await updateRecoleta(sheetId, sheetName, { ...editingRecoleta, ...recoletaData });
+        if (res && res.error) throw new Error(res.error);
         toast({ title: "Sucesso", description: "Recoleta atualizada com sucesso." });
       } else {
-        await addRecoleta(sheetId, recoletaData);
+        const res = await addRecoleta(sheetId, sheetName, recoletaData);
+        if (res && res.error) throw new Error(res.error);
         toast({ title: "Sucesso", description: "Nova recoleta registrada." });
       }
       
@@ -86,12 +89,13 @@ export default function RecoletaTable({ sheetId }: RecoletaTableProps) {
 
   const handleDelete = async (recoletaToDelete: Recoleta) => {
     try {
-      await deleteRecoleta(sheetId, recoletaToDelete.id);
+      const res = await deleteRecoleta(sheetId, sheetName, recoletaToDelete.id);
+      if (res && res.error) throw new Error(res.error);
       toast({ title: "Sucesso", description: "Recoleta excluída com sucesso." });
       fetchRecoletas();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete recoleta:", error);
-      toast({ title: "Erro ao excluir", description: "Não foi possível excluir o item da planilha.", variant: "destructive" });
+      toast({ title: "Erro ao excluir", description: error.message || "Não foi possível excluir o item da planilha.", variant: "destructive" });
     }
   };
   

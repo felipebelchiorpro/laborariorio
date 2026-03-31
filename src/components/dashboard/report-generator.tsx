@@ -18,9 +18,10 @@ import { ptBR } from 'date-fns/locale';
 interface ReportGeneratorProps {
   sheetId: string;
   reportTitle: string;
+  unitName?: string;
 }
 
-export default function ReportGenerator({ sheetId, reportTitle }: ReportGeneratorProps) {
+export default function ReportGenerator({ sheetId, reportTitle, unitName = "Geral" }: ReportGeneratorProps) {
   const [allExams, setAllExams] = useState<Exam[]>([]);
   const [filteredExams, setFilteredExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +37,7 @@ export default function ReportGenerator({ sheetId, reportTitle }: ReportGenerato
     if (!sheetId) return;
     setLoading(true);
     try {
-      const data = await getExams(sheetId);
+      const data = await getExams(sheetId, unitName);
       setAllExams(data);
     } catch (error) {
       toast({
