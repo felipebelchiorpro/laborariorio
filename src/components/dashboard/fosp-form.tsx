@@ -1,4 +1,3 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -15,47 +14,39 @@ import {
   FormDescription,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import type { Recoleta } from "@/lib/types"
+import type { Fosp } from "@/lib/types"
 import { Textarea } from "../ui/textarea"
 import { useEffect, useImperativeHandle, forwardRef } from "react"
-import { Combobox } from "../ui/combobox"
-import { withdrawnByOptions } from "@/lib/data"
 import { Switch } from "../ui/switch"
-
-export const tubeColorOptions = [
-  { value: "Vermelho", label: "🔴 Vermelho (Seco / Serum)" },
-  { value: "Roxo", label: "🟣 Roxo / EDTA (Hematologia)" },
-  { value: "Azul", label: "🔵 Azul (Citrato / Coagulação)" },
-  { value: "Cinza", label: "⚪ Cinza (Fluoreto / Glicemia)" },
-  { value: "Verde", label: "🟢 Verde (Heparina)" },
-  { value: "Amarelo", label: "🟡 Amarelo (Gel Separador)" },
-];
+import { DatePicker } from "../ui/date-picker"
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: "O nome do paciente é obrigatório." }),
-  ubs: z.string().min(1, { message: "A UBS de destino é obrigatória." }),
-  tubeColor: z.string().optional(),
-  notified: z.boolean().default(false),
+  sent: z.boolean().default(false),
+  sentDate: z.string().optional(),
+  receivedBack: z.boolean().default(false),
+  examType: z.string().min(1, { message: "O tipo de exame é obrigatório." }),
   observations: z.string().optional(),
 })
 
-export type RecoletaFormValues = z.infer<typeof formSchema>
+export type FospFormValues = z.infer<typeof formSchema>
 
-interface RecoletaFormProps {
-    recoleta?: Recoleta | null;
-    onSubmit: (data: RecoletaFormValues) => void;
+interface FospFormProps {
+    fosp?: Fosp | null;
+    onSubmit: (data: FospFormValues) => void;
     onDone: () => void;
     isSubmitting?: boolean;
 }
 
-export const RecoletaForm = forwardRef(({ recoleta, onSubmit, onDone, isSubmitting }: RecoletaFormProps, ref) => {
-  const form = useForm<RecoletaFormValues>({
+export const FospForm = forwardRef(({ fosp, onSubmit, onDone, isSubmitting }: FospFormProps, ref) => {
+  const form = useForm<FospFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       patientName: "",
-      ubs: "",
-      tubeColor: "",
-      notified: false,
+      sent: false,
+      sentDate: "",
+      receivedBack: false,
+      examType: "",
       observations: "",
     },
   })
@@ -63,9 +54,10 @@ export const RecoletaForm = forwardRef(({ recoleta, onSubmit, onDone, isSubmitti
   const resetForm = () => {
     form.reset({
       patientName: "",
-      ubs: "",
-      tubeColor: "",
-      notified: false,
+      sent: false,
+      sentDate: "",
+      receivedBack: false,
+      examType: "",
       observations: "",
     });
   }
@@ -75,22 +67,23 @@ export const RecoletaForm = forwardRef(({ recoleta, onSubmit, onDone, isSubmitti
   }));
 
   useEffect(() => {
-    if (recoleta) {
+    if (fosp) {
       form.reset({
-        patientName: recoleta.patientName,
-        ubs: recoleta.ubs,
-        tubeColor: recoleta.tubeColor || "",
-        notified: recoleta.notified,
-        observations: recoleta.observations,
+        patientName: fosp.patientName,
+        sent: fosp.sent,
+        sentDate: fosp.sentDate || "",
+        receivedBack: fosp.receivedBack,
+        examType: fosp.examType || "",
+        observations: fosp.observations || "",
       });
     } else {
       resetForm();
     }
-  }, [recoleta, form]);
+  }, [fosp, form]);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="patientName"
@@ -104,53 +97,30 @@ export const RecoletaForm = forwardRef(({ recoleta, onSubmit, onDone, isSubmitti
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
-          name="ubs"
+          name="examType"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-                <FormLabel>UBS / Destino</FormLabel>
-               <Combobox
-                options={withdrawnByOptions}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                placeholder="Selecione a UBS..."
-                searchPlaceholder="Buscar UBS..."
-                notFoundMessage="UBS não encontrada."
-                className={isSubmitting ? "pointer-events-none opacity-50" : ""}
-              />
+            <FormItem>
+              <FormLabel>Tipo de Exame</FormLabel>
+              <FormControl>
+                <Input placeholder="Digite o tipo de exame (ex: Biópsia, Citologia...)" {...field} disabled={isSubmitting} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
-          name="tubeColor"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Cor do Tubo / Coleta</FormLabel>
-              <Combobox
-                options={tubeColorOptions}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                placeholder="Selecione a cor do tubo..."
-                searchPlaceholder="Buscar cor do tubo..."
-                notFoundMessage="Usar esta cor"
-                className={isSubmitting ? "pointer-events-none opacity-50" : ""}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="notified"
+          name="sent"
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
               <div className="space-y-0.5">
-                <FormLabel>Paciente Avisado?</FormLabel>
+                <FormLabel>Foi Enviado?</FormLabel>
                 <FormDescription>
-                  Marque se a notificação sobre a recoleta já foi feita.
+                  Marque se o exame FOSP já foi enviado.
                 </FormDescription>
               </div>
               <FormControl>
@@ -163,15 +133,54 @@ export const RecoletaForm = forwardRef(({ recoleta, onSubmit, onDone, isSubmitti
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="sentDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Data de Envio</FormLabel>
+              <DatePicker 
+                date={field.value ? new Date(field.value) : undefined}
+                setDate={(date) => field.onChange(date ? date.toISOString() : '')}
+                placeholder="Selecione a data de envio"
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="receivedBack"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <FormLabel>Recebido de Volta?</FormLabel>
+                <FormDescription>
+                  Marque se o resultado/exame já retornou.
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="observations"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Exame a Repetir / Observações</FormLabel>
+              <FormLabel>Observações</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Ex: Hemograma completo / repetição de glicemia..."
+                  placeholder="Digite observações sobre o FOSP..."
                   className="resize-none"
                   {...field}
                   disabled={isSubmitting}
@@ -185,7 +194,7 @@ export const RecoletaForm = forwardRef(({ recoleta, onSubmit, onDone, isSubmitti
         <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>Cancelar</Button>
             <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (recoleta ? 'Salvando...' : 'Registrando...') : (recoleta ? 'Salvar Alterações' : 'Registrar')}
+                {isSubmitting ? (fosp ? 'Salvando...' : 'Registrando...') : (fosp ? 'Salvar Alterações' : 'Registrar')}
             </Button>
         </div>
       </form>
@@ -193,4 +202,4 @@ export const RecoletaForm = forwardRef(({ recoleta, onSubmit, onDone, isSubmitti
   )
 });
 
-RecoletaForm.displayName = "RecoletaForm";
+FospForm.displayName = "FospForm";

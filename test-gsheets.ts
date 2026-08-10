@@ -22,7 +22,7 @@ async function getAuthClient() {
 async function run() {
   try {
     const auth = await getAuthClient();
-    const sheets = google.sheets({ version: 'v4', auth });
+    const sheets = google.sheets({ version: 'v4', auth: auth as any });
     
     const spreadsheetId = process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID;
     console.log(`Using Spreadsheet ID: ${spreadsheetId}`);

@@ -52,6 +52,7 @@ export default function RecoletaTable({ sheetId, sheetName = "Recoleta" }: Recol
       const recoletaData: Omit<Recoleta, 'id' | 'rowNumber'> = {
         patientName: values.patientName,
         ubs: values.ubs,
+        tubeColor: values.tubeColor,
         notified: values.notified,
         observations: values.observations,
       };

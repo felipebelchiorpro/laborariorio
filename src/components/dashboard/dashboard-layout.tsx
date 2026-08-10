@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   Microscope,
   FileText,
+  Send,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -78,6 +79,14 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       color: 'text-emerald-500',
       activeColor: 'bg-emerald-500/10 text-emerald-500',
       tooltip: 'Gestão de Recoleta',
+    },
+    {
+      title: 'FOSP',
+      href: '/fosp',
+      icon: Send,
+      color: 'text-rose-500',
+      activeColor: 'bg-rose-500/10 text-rose-500',
+      tooltip: 'Gestão de FOSP',
     },
     {
       title: 'Relatórios',

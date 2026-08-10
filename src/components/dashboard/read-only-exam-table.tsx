@@ -71,7 +71,7 @@ export default function ReadOnlyExamTable({ sheetId, unitName = "Geral" }: ReadO
             return normalize(rowValue).includes(normalize(filterValue));
         }
     },
-    globalFilterFn: 'contains',
+    globalFilterFn: 'contains' as any,
   });
 
   const fetchExams = React.useCallback(async () => {

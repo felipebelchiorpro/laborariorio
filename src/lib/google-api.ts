@@ -1,6 +1,6 @@
 'use server';
 import { google } from 'googleapis';
-import type { Exam, PdfLink, Recoleta } from './types';
+import type { Exam, PdfLink, Recoleta, Fosp } from './types';
 import { parse, isValid, format } from 'date-fns';
 import { randomUUID } from 'crypto';
 import { uploadPdfToCloudinary } from './cloudinary';
@@ -14,21 +14,33 @@ const SCOPES = [
 const EXAM_SHEETS_RANGE = 'A:F';
 const EXAM_ID_COLUMN_INDEX = 0;
 
-// Colunas Recoleta: ID, Paciente, UBS, Avisado, OBS
-const RECOLETA_SHEETS_RANGE = 'A:E';
+// Colunas Recoleta: ID, Paciente, UBS, Cor do Tubo, Avisado, OBS
+const RECOLETA_SHEETS_RANGE = 'A:F';
 const RECOLETA_ID_COLUMN_INDEX = 0;
 
 
 async function getAuthClient() {
-  const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
+  const rawCredentials = process.env.GOOGLE_CREDENTIALS_BASE64;
 
-  if (!base64Credentials) {
+  if (!rawCredentials) {
     console.error("[AUTH ERROR] A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não foi encontrada.");
     throw new Error('A variável de ambiente GOOGLE_CREDENTIALS_BASE64 não foi encontrada.');
   }
 
   try {
-    const credentialsStr = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    // Remove literal '\n', real newlines, and whitespace inserted by environment variable editors
+    const cleanBase64 = rawCredentials
+      .replace(/\\n/g, '')
+      .replace(/[\r\n\s]/g, '')
+      .trim();
+
+    let credentialsStr: string;
+    if (cleanBase64.startsWith('{')) {
+      credentialsStr = cleanBase64;
+    } else {
+      credentialsStr = Buffer.from(cleanBase64, 'base64').toString('utf-8');
+    }
+
     const credentials = JSON.parse(credentialsStr.trim());
 
     const auth = new google.auth.GoogleAuth({
@@ -106,17 +118,70 @@ function mapExamToRow(exam: Partial<Omit<Exam, 'rowNumber'>>): any[] {
 
 function mapRowToRecoleta(row: any[], index: number): Recoleta | null {
     const rowNumber = index + 2;
-    const [id, patientName, ubs, notifiedStr, observations] = row;
+    if (!row || row.length === 0) return null;
 
-    if (!patientName || String(patientName).trim() === '') {
+    let id: string;
+    let patientName: string;
+    let ubs: string;
+    let tubeColor: string = '';
+    let notifiedStr: string = '';
+    let observations: string = '';
+
+    const isSimNao = (val: any) => String(val || '').trim().toUpperCase() === 'SIM' || String(val || '').trim().toUpperCase() === 'NÃO';
+
+    if (isSimNao(row[4])) {
+        // 6-column layout: ID, Paciente, UBS, Cor do Tubo, Avisado, OBS
+        id = String(row[0] || `MISSING_ID_ROW_${rowNumber}`);
+        patientName = String(row[1] || '');
+        ubs = String(row[2] || '');
+        tubeColor = String(row[3] || '');
+        notifiedStr = String(row[4] || '').toUpperCase();
+        observations = String(row[5] || '');
+    } else if (isSimNao(row[3])) {
+        if (String(row[0] || '').includes('-')) {
+            // 5-column legacy: ID, Paciente, UBS, Avisado, OBS
+            id = String(row[0] || `MISSING_ID_ROW_${rowNumber}`);
+            patientName = String(row[1] || '');
+            ubs = String(row[2] || '');
+            tubeColor = '';
+            notifiedStr = String(row[3] || '').toUpperCase();
+            observations = String(row[4] || '');
+        } else {
+            // 5-column without ID: Paciente, UBS, Cor do Tubo, Avisado, OBS
+            id = `ROW_${rowNumber}`;
+            patientName = String(row[0] || '');
+            ubs = String(row[1] || '');
+            tubeColor = String(row[2] || '');
+            notifiedStr = String(row[3] || '').toUpperCase();
+            observations = String(row[4] || '');
+        }
+    } else if (isSimNao(row[2])) {
+        // 4-column legacy: Paciente, UBS, Avisado, OBS
+        id = `ROW_${rowNumber}`;
+        patientName = String(row[0] || '');
+        ubs = String(row[1] || '');
+        tubeColor = '';
+        notifiedStr = String(row[2] || '').toUpperCase();
+        observations = String(row[3] || '');
+    } else {
+        id = String(row[0] || `MISSING_ID_ROW_${rowNumber}`);
+        patientName = String(row[1] || row[0] || '');
+        ubs = String(row[2] || '');
+        tubeColor = String(row[3] || '');
+        notifiedStr = String(row[4] || '').toUpperCase();
+        observations = String(row[5] || '');
+    }
+
+    if (!patientName || patientName.trim() === '') {
         return null;
     }
 
     return {
-        id: String(id || `MISSING_ID_ROW_${rowNumber}`),
-        patientName: String(patientName || ''),
+        id,
+        patientName: patientName.trim(),
         ubs: ubs || '',
-        notified: String(notifiedStr).toUpperCase() === 'SIM',
+        tubeColor: tubeColor || '',
+        notified: notifiedStr === 'SIM',
         observations: observations || '',
         rowNumber: rowNumber
     };
@@ -127,6 +192,7 @@ function mapRecoletaToRow(recoleta: Partial<Omit<Recoleta, 'rowNumber'>>): any[]
         recoleta.id || '',
         recoleta.patientName || '',
         recoleta.ubs || '',
+        recoleta.tubeColor || '',
         recoleta.notified ? 'SIM' : 'NÃO',
         recoleta.observations || '',
     ];
@@ -137,7 +203,7 @@ function mapRecoletaToRow(recoleta: Partial<Omit<Recoleta, 'rowNumber'>>): any[]
 
 async function getSheetsApi() {
     const auth = await getAuthClient();
-    return google.sheets({ version: 'v4', auth });
+    return google.sheets({ version: 'v4', auth: auth as any });
 }
 
 async function findRowById(sheets: any, spreadsheetId: string, id: string, range: string): Promise<number | null> {
@@ -207,13 +273,26 @@ async function deleteRow(spreadsheetId: string, id: string, sheetName: string, i
 
 // --- Funções de Exame ---
 
-export async function getExams(spreadsheetId: string, sheetName: string): Promise<Exam[]> {
+export async function getExams(spreadsheetId: string, sheetName: string = 'Sheet1'): Promise<Exam[]> {
   noStore();
   if (!spreadsheetId) return [];
   try {
     const sheets = await getSheetsApi();
-    const range = `${sheetName}!${EXAM_SHEETS_RANGE}`;
-    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    let range = `${sheetName}!${EXAM_SHEETS_RANGE}`;
+    let response;
+    try {
+      response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    } catch (err: any) {
+      console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada em ${spreadsheetId}. Tentando primeira aba...`);
+      const meta = await sheets.spreadsheets.get({ spreadsheetId });
+      const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
+      if (firstSheetTitle && firstSheetTitle !== sheetName) {
+        range = `${firstSheetTitle}!${EXAM_SHEETS_RANGE}`;
+        response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+      } else {
+        throw err;
+      }
+    }
     const rows = response.data.values;
     if (!rows || rows.length <= 1) return [];
     
@@ -256,13 +335,26 @@ export async function deleteExam(spreadsheetId: string, sheetName: string, id: s
 
 // --- Funções de Recoleta ---
 
-export async function getRecoletas(spreadsheetId: string, sheetName: string): Promise<Recoleta[]> {
+export async function getRecoletas(spreadsheetId: string, sheetName: string = 'Recoleta'): Promise<Recoleta[]> {
     noStore();
     if (!spreadsheetId) return [];
     try {
         const sheets = await getSheetsApi();
-        const range = `${sheetName}!${RECOLETA_SHEETS_RANGE}`;
-        const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+        let range = `${sheetName}!${RECOLETA_SHEETS_RANGE}`;
+        let response;
+        try {
+            response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+        } catch (err: any) {
+            console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada em ${spreadsheetId}. Tentando primeira aba...`);
+            const meta = await sheets.spreadsheets.get({ spreadsheetId });
+            const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
+            if (firstSheetTitle && firstSheetTitle !== sheetName) {
+                range = `${firstSheetTitle}!${RECOLETA_SHEETS_RANGE}`;
+                response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+            } else {
+                throw err;
+            }
+        }
         const rows = response.data.values;
         if (!rows || rows.length <= 1) return [];
 
@@ -300,7 +392,7 @@ export async function updateRecoleta(spreadsheetId: string, sheetName: string, r
             return await addRecoleta(spreadsheetId, sheetName, recoleta);
         }
 
-        const range = `${sheetName}!A${rowNumber}:E${rowNumber}`;
+        const range = `${sheetName}!A${rowNumber}:F${rowNumber}`;
         const values = [mapRecoletaToRow(recoleta)];
         await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
         return { success: true };
@@ -316,6 +408,181 @@ export async function deleteRecoleta(spreadsheetId: string, sheetName: string, i
         return { success: true };
     } catch (error: any) {
         console.error(`[Sheets API Error] Falha ao excluir recoleta:`, error);
+        return { error: error.message || 'Failed to delete data from Google Sheets.' };
+    }
+}
+
+// --- Funções de FOSP ---
+
+const FOSP_SHEETS_RANGE = 'A:G';
+
+function mapRowToFosp(row: any[], index: number): Fosp | null {
+    const rowNumber = index + 2;
+    if (!row || row.length === 0) return null;
+
+    let id: string;
+    let patientName: string;
+    let sentStr: string;
+    let sentDateStr: string;
+    let receivedBackStr: string;
+    let examType: string;
+    let observations: string;
+
+    const isSimNao = (val: any) => String(val || '').trim().toUpperCase() === 'SIM' || String(val || '').trim().toUpperCase() === 'NÃO';
+
+    if (isSimNao(row[2])) {
+        // 7-column layout: ID, Paciente, Enviado, Data Envio, Recebido de Volta, Tipo de Exame, Observações
+        id = String(row[0] || `MISSING_ID_ROW_${rowNumber}`);
+        patientName = String(row[1] || '');
+        sentStr = String(row[2] || '').toUpperCase();
+        sentDateStr = String(row[3] || '');
+        receivedBackStr = String(row[4] || '').toUpperCase();
+        examType = String(row[5] || '');
+        observations = String(row[6] || '');
+    } else if (isSimNao(row[1])) {
+        // 6-column layout: Paciente, Enviado, Data Envio, Recebido de Volta, Tipo de Exame, Observações
+        id = `ROW_${rowNumber}`;
+        patientName = String(row[0] || '');
+        sentStr = String(row[1] || '').toUpperCase();
+        sentDateStr = String(row[2] || '');
+        receivedBackStr = String(row[3] || '').toUpperCase();
+        examType = String(row[4] || '');
+        observations = String(row[5] || '');
+    } else {
+        id = String(row[0] || `MISSING_ID_ROW_${rowNumber}`);
+        patientName = String(row[1] || row[0] || '');
+        sentStr = String(row[2] || '').toUpperCase();
+        sentDateStr = String(row[3] || '');
+        receivedBackStr = String(row[4] || '').toUpperCase();
+        examType = String(row[5] || '');
+        observations = String(row[6] || '');
+    }
+
+    if (!patientName || patientName.trim() === '') {
+        return null;
+    }
+
+    let sentDate: string | undefined = undefined;
+    if (sentDateStr && sentDateStr.trim() !== '') {
+        try {
+            const dateString = String(sentDateStr).trim();
+            let parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+            if (isValid(parsedDate)) {
+                sentDate = parsedDate.toISOString();
+            } else {
+                sentDate = dateString;
+            }
+        } catch (e) {
+            sentDate = sentDateStr;
+        }
+    }
+
+    return {
+        id,
+        patientName: patientName.trim(),
+        sent: sentStr === 'SIM',
+        sentDate,
+        receivedBack: receivedBackStr === 'SIM',
+        examType: examType || '',
+        observations: observations || '',
+        rowNumber: rowNumber
+    };
+}
+
+function mapFospToRow(fosp: Partial<Omit<Fosp, 'rowNumber'>>): any[] {
+    let displaySentDate = '';
+    if (fosp.sentDate) {
+        try {
+            displaySentDate = fosp.sentDate.includes('T') ? format(new Date(fosp.sentDate), 'dd/MM/yyyy') : fosp.sentDate;
+        } catch (e) {
+            displaySentDate = fosp.sentDate;
+        }
+    }
+
+    return [
+        fosp.id || '',
+        fosp.patientName || '',
+        fosp.sent ? 'SIM' : 'NÃO',
+        displaySentDate,
+        fosp.receivedBack ? 'SIM' : 'NÃO',
+        fosp.examType || '',
+        fosp.observations || '',
+    ];
+}
+
+export async function getFosps(spreadsheetId: string, sheetName: string = 'FOSP'): Promise<Fosp[]> {
+    noStore();
+    if (!spreadsheetId) return [];
+    try {
+        const sheets = await getSheetsApi();
+        let range = `${sheetName}!${FOSP_SHEETS_RANGE}`;
+        let response;
+        try {
+            response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+        } catch (err: any) {
+            console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada em ${spreadsheetId}. Tentando primeira aba...`);
+            const meta = await sheets.spreadsheets.get({ spreadsheetId });
+            const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
+            if (firstSheetTitle && firstSheetTitle !== sheetName) {
+                range = `${firstSheetTitle}!${FOSP_SHEETS_RANGE}`;
+                response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+            } else {
+                throw err;
+            }
+        }
+        const rows = response.data.values;
+        if (!rows || rows.length <= 1) return [];
+
+        return rows.slice(1)
+            .map((row: any[], index: number) => mapRowToFosp(row, index + 1))
+            .filter((item: Fosp | null): item is Fosp => item !== null && item.patientName.trim() !== '');
+    } catch (error) {
+        console.error(`[Sheets API Error] Falha ao buscar registros FOSP:`, error);
+        throw new Error('Failed to fetch data from Google Sheets.');
+    }
+}
+
+export async function addFosp(spreadsheetId: string, sheetName: string, fosp: Omit<Fosp, 'id' | 'rowNumber'>) {
+    try {
+        const sheets = await getSheetsApi();
+        const newId = randomUUID();
+        const values = [mapFospToRow({ ...fosp, id: newId })];
+        const range = `${sheetName}!${FOSP_SHEETS_RANGE}`;
+        await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao adicionar FOSP:`, error);
+        return { error: error.message || 'Failed to add data to Google Sheets.' };
+    }
+}
+
+export async function updateFosp(spreadsheetId: string, sheetName: string, fosp: Fosp) {
+    if (!fosp.id) return { error: "O ID é necessário para atualizar." };
+    try {
+        const sheets = await getSheetsApi();
+        const rowNumber = await findRowById(sheets, spreadsheetId, fosp.id, `${sheetName}!A:A`);
+
+        if (!rowNumber) {
+            console.warn(`Registro FOSP com ID ${fosp.id} não encontrado. Adicionando como novo.`);
+            return await addFosp(spreadsheetId, sheetName, fosp);
+        }
+
+        const range = `${sheetName}!A${rowNumber}:G${rowNumber}`;
+        const values = [mapFospToRow(fosp)];
+        await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao atualizar FOSP:`, error);
+        return { error: error.message || 'Failed to update data in Google Sheets.' };
+    }
+}
+
+export async function deleteFosp(spreadsheetId: string, sheetName: string, id: string) {
+    try {
+        await deleteRow(spreadsheetId, id, sheetName, 'A:A');
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao excluir FOSP:`, error);
         return { error: error.message || 'Failed to delete data from Google Sheets.' };
     }
 }

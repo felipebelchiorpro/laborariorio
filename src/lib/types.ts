@@ -19,6 +19,18 @@ export type Recoleta = {
   rowNumber: number;
   patientName: string;
   ubs: string;
+  tubeColor?: string;
   notified: boolean;
+  observations?: string;
+};
+
+export type Fosp = {
+  id: string;
+  rowNumber: number;
+  patientName: string;
+  sent: boolean;
+  sentDate?: string;
+  receivedBack: boolean;
+  examType: string;
   observations?: string;
 };
