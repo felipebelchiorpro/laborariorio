@@ -138,25 +138,15 @@ function mapRowToRecoleta(row: any[], index: number): Recoleta | null {
         notifiedStr = String(row[4] || '').toUpperCase();
         observations = String(row[5] || '');
     } else if (isSimNao(row[3])) {
-        if (String(row[0] || '').includes('-')) {
-            // 5-column legacy: ID, Paciente, UBS, Avisado, OBS
-            id = String(row[0] || `MISSING_ID_ROW_${rowNumber}`);
-            patientName = String(row[1] || '');
-            ubs = String(row[2] || '');
-            tubeColor = '';
-            notifiedStr = String(row[3] || '').toUpperCase();
-            observations = String(row[4] || '');
-        } else {
-            // 5-column without ID: Paciente, UBS, Cor do Tubo, Avisado, OBS
-            id = `ROW_${rowNumber}`;
-            patientName = String(row[0] || '');
-            ubs = String(row[1] || '');
-            tubeColor = String(row[2] || '');
-            notifiedStr = String(row[3] || '').toUpperCase();
-            observations = String(row[4] || '');
-        }
+        // 5-column legacy layout: ID, Paciente, UBS, Avisado, OBS
+        id = String(row[0] || `MISSING_ID_ROW_${rowNumber}`);
+        patientName = String(row[1] || '');
+        ubs = String(row[2] || '');
+        tubeColor = '';
+        notifiedStr = String(row[3] || '').toUpperCase();
+        observations = String(row[4] || '');
     } else if (isSimNao(row[2])) {
-        // 4-column legacy: Paciente, UBS, Avisado, OBS
+        // 4-column layout without ID: Paciente, UBS, Avisado, OBS
         id = `ROW_${rowNumber}`;
         patientName = String(row[0] || '');
         ubs = String(row[1] || '');
@@ -204,6 +194,30 @@ function mapRecoletaToRow(recoleta: Partial<Omit<Recoleta, 'rowNumber'>>): any[]
 async function getSheetsApi() {
     const auth = await getAuthClient();
     return google.sheets({ version: 'v4', auth: auth as any });
+}
+
+async function resolveSheetName(sheets: any, spreadsheetId: string, preferredSheetName: string): Promise<string> {
+    try {
+        const meta = await sheets.spreadsheets.get({ spreadsheetId });
+        const sheetList = meta.data.sheets || [];
+        
+        // 1. Exact match
+        const exact = sheetList.find((s: any) => s.properties?.title === preferredSheetName);
+        if (exact && exact.properties?.title) return exact.properties.title;
+
+        // 2. Case-insensitive match (e.g. "recoleta", "Recoleta", "fosp", "Fosp")
+        const ci = sheetList.find((s: any) => s.properties?.title?.toLowerCase() === preferredSheetName.toLowerCase());
+        if (ci && ci.properties?.title) return ci.properties.title;
+
+        // 3. Fallback to first sheet tab in the spreadsheet
+        if (sheetList.length > 0 && sheetList[0].properties?.title) {
+            console.warn(`[Sheets API] Aba '${preferredSheetName}' não encontrada na planilha ${spreadsheetId}. Usando a aba '${sheetList[0].properties.title}'.`);
+            return sheetList[0].properties.title;
+        }
+    } catch (e) {
+        console.error(`[Sheets API Warning] Falha ao verificar abas da planilha:`, e);
+    }
+    return preferredSheetName;
 }
 
 async function findRowById(sheets: any, spreadsheetId: string, id: string, range: string): Promise<number | null> {
@@ -307,24 +321,26 @@ export async function getExams(spreadsheetId: string, sheetName: string = 'Sheet
 
 export async function addExam(spreadsheetId: string, sheetName: string, exam: Omit<Exam, 'id' | 'rowNumber'>) {
     const sheets = await getSheetsApi();
+    const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
     const newId = randomUUID();
     const values = [mapExamToRow({ ...exam, id: newId })];
-    const range = `${sheetName}!${EXAM_SHEETS_RANGE}`;
+    const range = `${targetSheetName}!${EXAM_SHEETS_RANGE}`;
     await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
 }
 
 export async function updateExam(spreadsheetId: string, sheetName: string, exam: Exam) {
     if (!exam.id) throw new Error("O ID do exame é necessário para atualizar.");
     const sheets = await getSheetsApi();
-    const rowNumber = await findRowById(sheets, spreadsheetId, exam.id, `${sheetName}!A:A`);
+    const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+    const rowNumber = await findRowById(sheets, spreadsheetId, exam.id, `${targetSheetName}!A:A`);
 
     if (!rowNumber) {
         console.warn(`Exame com ID ${exam.id} não encontrado. Adicionando como novo.`);
-        await addExam(spreadsheetId, sheetName, exam);
+        await addExam(spreadsheetId, targetSheetName, exam);
         return;
     }
 
-    const range = `${sheetName}!A${rowNumber}:F${rowNumber}`;
+    const range = `${targetSheetName}!A${rowNumber}:F${rowNumber}`;
     const values = [mapExamToRow(exam)];
     await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
 }
@@ -340,21 +356,9 @@ export async function getRecoletas(spreadsheetId: string, sheetName: string = 'R
     if (!spreadsheetId) return [];
     try {
         const sheets = await getSheetsApi();
-        let range = `${sheetName}!${RECOLETA_SHEETS_RANGE}`;
-        let response;
-        try {
-            response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-        } catch (err: any) {
-            console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada em ${spreadsheetId}. Tentando primeira aba...`);
-            const meta = await sheets.spreadsheets.get({ spreadsheetId });
-            const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
-            if (firstSheetTitle && firstSheetTitle !== sheetName) {
-                range = `${firstSheetTitle}!${RECOLETA_SHEETS_RANGE}`;
-                response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-            } else {
-                throw err;
-            }
-        }
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+        const range = `${targetSheetName}!${RECOLETA_SHEETS_RANGE}`;
+        const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
         const rows = response.data.values;
         if (!rows || rows.length <= 1) return [];
 
@@ -370,9 +374,10 @@ export async function getRecoletas(spreadsheetId: string, sheetName: string = 'R
 export async function addRecoleta(spreadsheetId: string, sheetName: string, recoleta: Omit<Recoleta, 'id' | 'rowNumber'>) {
     try {
         const sheets = await getSheetsApi();
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
         const newId = randomUUID();
         const values = [mapRecoletaToRow({ ...recoleta, id: newId })];
-        const range = `${sheetName}!${RECOLETA_SHEETS_RANGE}`;
+        const range = `${targetSheetName}!${RECOLETA_SHEETS_RANGE}`;
         await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
         return { success: true };
     } catch (error: any) {
@@ -385,14 +390,15 @@ export async function updateRecoleta(spreadsheetId: string, sheetName: string, r
     if (!recoleta.id) return { error: "O ID da recoleta é necessário para atualizar." };
     try {
         const sheets = await getSheetsApi();
-        const rowNumber = await findRowById(sheets, spreadsheetId, recoleta.id, `${sheetName}!A:A`);
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+        const rowNumber = await findRowById(sheets, spreadsheetId, recoleta.id, `${targetSheetName}!A:A`);
 
         if (!rowNumber) {
             console.warn(`Recoleta com ID ${recoleta.id} não encontrada. Adicionando como nova.`);
-            return await addRecoleta(spreadsheetId, sheetName, recoleta);
+            return await addRecoleta(spreadsheetId, targetSheetName, recoleta);
         }
 
-        const range = `${sheetName}!A${rowNumber}:F${rowNumber}`;
+        const range = `${targetSheetName}!A${rowNumber}:F${rowNumber}`;
         const values = [mapRecoletaToRow(recoleta)];
         await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
         return { success: true };
@@ -515,21 +521,9 @@ export async function getFosps(spreadsheetId: string, sheetName: string = 'FOSP'
     if (!spreadsheetId) return [];
     try {
         const sheets = await getSheetsApi();
-        let range = `${sheetName}!${FOSP_SHEETS_RANGE}`;
-        let response;
-        try {
-            response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-        } catch (err: any) {
-            console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada em ${spreadsheetId}. Tentando primeira aba...`);
-            const meta = await sheets.spreadsheets.get({ spreadsheetId });
-            const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
-            if (firstSheetTitle && firstSheetTitle !== sheetName) {
-                range = `${firstSheetTitle}!${FOSP_SHEETS_RANGE}`;
-                response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-            } else {
-                throw err;
-            }
-        }
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+        const range = `${targetSheetName}!${FOSP_SHEETS_RANGE}`;
+        const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
         const rows = response.data.values;
         if (!rows || rows.length <= 1) return [];
 
@@ -545,9 +539,10 @@ export async function getFosps(spreadsheetId: string, sheetName: string = 'FOSP'
 export async function addFosp(spreadsheetId: string, sheetName: string, fosp: Omit<Fosp, 'id' | 'rowNumber'>) {
     try {
         const sheets = await getSheetsApi();
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
         const newId = randomUUID();
         const values = [mapFospToRow({ ...fosp, id: newId })];
-        const range = `${sheetName}!${FOSP_SHEETS_RANGE}`;
+        const range = `${targetSheetName}!${FOSP_SHEETS_RANGE}`;
         await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
         return { success: true };
     } catch (error: any) {
@@ -560,14 +555,15 @@ export async function updateFosp(spreadsheetId: string, sheetName: string, fosp:
     if (!fosp.id) return { error: "O ID é necessário para atualizar." };
     try {
         const sheets = await getSheetsApi();
-        const rowNumber = await findRowById(sheets, spreadsheetId, fosp.id, `${sheetName}!A:A`);
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+        const rowNumber = await findRowById(sheets, spreadsheetId, fosp.id, `${targetSheetName}!A:A`);
 
         if (!rowNumber) {
             console.warn(`Registro FOSP com ID ${fosp.id} não encontrado. Adicionando como novo.`);
-            return await addFosp(spreadsheetId, sheetName, fosp);
+            return await addFosp(spreadsheetId, targetSheetName, fosp);
         }
 
-        const range = `${sheetName}!A${rowNumber}:G${rowNumber}`;
+        const range = `${targetSheetName}!A${rowNumber}:G${rowNumber}`;
         const values = [mapFospToRow(fosp)];
         await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
         return { success: true };
