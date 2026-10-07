@@ -230,6 +230,12 @@ async function resolveSheetName(sheets: any, spreadsheetId: string, preferredShe
         });
         if (wordMatch && wordMatch.properties?.title) return wordMatch.properties.title;
 
+        // 5. Fallback: If no match by name, return the FIRST tab in the dedicated spreadsheet
+        if (sheetList.length > 0 && sheetList[0].properties?.title) {
+            console.warn(`[Sheets API] Aba '${preferredSheetName}' não encontrada na planilha ${spreadsheetId}. Usando a primeira aba '${sheetList[0].properties.title}'.`);
+            return sheetList[0].properties.title;
+        }
+
     } catch (e) {
         console.error(`[Sheets API Warning] Falha ao verificar abas da planilha:`, e);
     }
