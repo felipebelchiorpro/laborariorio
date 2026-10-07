@@ -6,10 +6,7 @@ import DashboardLayout from '@/components/dashboard/dashboard-layout';
 
 const RECOLETA_SHEET_ID = 
   process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID || 
-  process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID || 
-  process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID || 
-  process.env.NEXT_PUBLIC_FICHARIO_SHEET_ID || 
-  '';
+  '1OsCAoFjrmZtgKE8FpPjsEhvfpUdV9Sm_fK2T6qZS2Mw';
 
 function RecoletaPage() {
   if (!RECOLETA_SHEET_ID) {
