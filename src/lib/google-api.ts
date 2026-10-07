@@ -309,21 +309,10 @@ export async function getExams(spreadsheetId: string, sheetName: string = 'Sheet
   if (!spreadsheetId) return [];
   try {
     const sheets = await getSheetsApi();
-    let range = `${sheetName}!${EXAM_SHEETS_RANGE}`;
-    let response;
-    try {
-      response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-    } catch (err: any) {
-      console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada em ${spreadsheetId}. Tentando primeira aba...`);
-      const meta = await sheets.spreadsheets.get({ spreadsheetId });
-      const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
-      if (firstSheetTitle && firstSheetTitle !== sheetName) {
-        range = `${firstSheetTitle}!${EXAM_SHEETS_RANGE}`;
-        response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-      } else {
-        throw err;
-      }
-    }
+    const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+    const range = `${targetSheetName}!${EXAM_SHEETS_RANGE}`;
+    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+
     const rows = response.data.values;
     if (!rows || rows.length <= 1) return [];
     
