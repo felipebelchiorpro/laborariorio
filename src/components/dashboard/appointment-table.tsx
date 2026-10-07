@@ -9,7 +9,9 @@ import { getAppointments, addAppointment, updateAppointment, deleteAppointment }
 import { toast } from "@/hooks/use-toast";
 import { getColumns } from "./appointment-columns";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, BellRing, CheckCircle2, XCircle, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, BellRing, CheckCircle2, XCircle, Users, Settings } from "lucide-react";
+import WhatsAppTemplateDialog from "./whatsapp-template-dialog";
 
 interface AppointmentTableProps {
   sheetId: string;
@@ -127,6 +129,8 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
     setIsFormOpen(true);
   };
   
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = React.useState(false);
+
   const handleCloseDialog = () => {
     if (!isSubmitting) {
       setIsFormOpen(false);
@@ -144,6 +148,23 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
 
   return (
     <div className="space-y-6">
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Gestão de Agendamentos</h2>
+          <p className="text-xs text-muted-foreground">Cadastre exames agendados, envie mensagens dinâmicas no WhatsApp e controle presenças.</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsTemplateDialogOpen(true)}
+          className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 font-semibold shadow-sm gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          <span>Configurar Mensagem WhatsApp</span>
+        </Button>
+      </div>
+
       {/* KPI / Summary Cards ("cards brilhantes") */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Agendamentos */}
@@ -227,6 +248,12 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
           />
         </DialogContent>
       </Dialog>
+
+      {/* WhatsApp Template Configuration Dialog */}
+      <WhatsAppTemplateDialog
+        open={isTemplateDialogOpen}
+        onOpenChange={setIsTemplateDialogOpen}
+      />
     </div>
   );
 }

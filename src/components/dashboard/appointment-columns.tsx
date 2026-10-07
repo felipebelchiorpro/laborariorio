@@ -9,6 +9,7 @@ import { DataTableRowActions } from "./data-table-row-actions"
 import { Badge } from "../ui/badge"
 import { cn, normalizeText } from "@/lib/utils"
 import { format } from "date-fns"
+import { getStoredWhatsAppTemplate, buildWhatsAppMessage } from "./whatsapp-template-dialog"
 
 export const getColumns = (
   onEdit: (appointment: Appointment) => void,
@@ -95,20 +96,15 @@ export const getColumns = (
       const phoneRaw = app.phone || '';
       const digitsOnly = phoneRaw.replace(/\D/g, '');
 
-      let displayDate = app.examDate;
-      if (app.examDate && app.examDate.includes('-')) {
-        const [y, m, d] = app.examDate.split('-');
-        if (y && m && d) displayDate = `${d}/${m}/${y}`;
-      }
-
       const openWhatsApp = () => {
         if (!digitsOnly) return;
         const formattedPhone = digitsOnly.length <= 11 ? `55${digitsOnly}` : digitsOnly;
-        const textMessage = encodeURIComponent(
-          `Olá ${app.patientName}, tudo bem? Aqui é do Laboratório Caconde. Lembramos do seu exame agendado para o dia ${displayDate || 'indicado'}. Por favor, confirme se você irá comparecer ou se precisa remarcar.`
-        );
+        const customTemplate = getStoredWhatsAppTemplate();
+        const rawMsg = buildWhatsAppMessage(customTemplate, app.patientName, app.examDate);
+        const textMessage = encodeURIComponent(rawMsg);
         window.open(`https://wa.me/${formattedPhone}?text=${textMessage}`, '_blank');
       };
+
 
       return (
         <div className="flex items-center gap-2">
