@@ -124,8 +124,8 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
               <FlaskConical className="h-5 w-5" />
             </div>
-            <span className="font-poppins text-lg font-bold tracking-tight whitespace-nowrap group-data-[collapsible=icon]:hidden translate-x-0 opacity-100 transition-all">
-              Laboratório <span className="text-primary">Caconde</span>
+            <span className="font-poppins text-base font-bold tracking-tight whitespace-nowrap group-data-[collapsible=icon]:hidden translate-x-0 opacity-100 transition-all">
+              Laboratório <span className="text-primary">Municipal de Caconde</span>
             </span>
           </div>
         </SidebarHeader>
@@ -201,9 +201,10 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         </main>
         <footer className="border-t bg-background/50 px-6 py-4 text-center backdrop-blur-sm">
            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
-             © 2025 Laboratório Caconde • <span className="text-primary/70">Grupo Belchior</span>
+             © 2026 Laboratório Municipal de Caconde • <span className="text-primary/70">Grupo Belchior</span>
            </p>
         </footer>
+
       </SidebarInset>
     </SidebarProvider>
   );

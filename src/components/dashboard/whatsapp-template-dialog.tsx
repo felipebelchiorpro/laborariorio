@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { Settings, RotateCcw, Check, Sparkles, MessageSquare } from "lucide-react";
 
-export const DEFAULT_WHATSAPP_TEMPLATE = `Olá *{paciente}*, tudo bem? Aqui é do *Laboratório Caconde*.
+export const DEFAULT_WHATSAPP_TEMPLATE = `Olá *{paciente}*, tudo bem? Aqui é do *Laboratório Municipal de Caconde*.
 
 Lembramos do seu exame agendado para o dia *{data}*.
 
@@ -41,7 +41,7 @@ export function buildWhatsAppMessage(template: string, patientName: string, exam
   return template
     .replace(/\{paciente\}/gi, patientName)
     .replace(/\{data\}/gi, displayDate || 'indicado')
-    .replace(/\{laboratorio\}/gi, 'Laboratório Caconde');
+    .replace(/\{laboratorio\}/gi, 'Laboratório Municipal de Caconde');
 }
 
 interface WhatsAppTemplateDialogProps {
