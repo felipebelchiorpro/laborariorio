@@ -10,7 +10,7 @@ const AGENDAMENTO_SHEET_ID =
   process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID || 
   process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID || 
   process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID || 
-  '';
+  '152u0-Rphsn3q7DFnWTIsOKpvi8n7BEzosSuHQC0uOSA';
 
 function AgendamentosPage() {
   if (!AGENDAMENTO_SHEET_ID) {
