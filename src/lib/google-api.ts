@@ -210,22 +210,26 @@ async function resolveSheetName(sheets: any, spreadsheetId: string, preferredShe
         if (exact && exact.properties?.title) return exact.properties.title;
 
         // 2. Case-insensitive match (e.g. "recoleta", "Recoleta", "fosp", "Fosp")
-        const ci = sheetList.find((s: any) => s.properties?.title?.toLowerCase() === preferredSheetName.toLowerCase());
+        const ci = sheetList.find((s: any) => s.properties?.title?.toLowerCase().trim() === preferredSheetName.toLowerCase().trim());
         if (ci && ci.properties?.title) return ci.properties.title;
 
-        // 3. Singular / Plural or substring match (e.g. "Agendamento" vs "Agendamentos")
-        const partial = sheetList.find((s: any) => {
+        // 3. Singular / Plural match (e.g. "Agendamento" vs "Agendamentos", "Recoleta" vs "Recoletas")
+        const cleanStr = (str: string) => str.toLowerCase().trim().replace(/s$/, '');
+        const normPref = cleanStr(preferredSheetName);
+        const matchPlural = sheetList.find((s: any) => {
+            const titleNorm = cleanStr(s.properties?.title || '');
+            return titleNorm === normPref && titleNorm.length >= 3;
+        });
+        if (matchPlural && matchPlural.properties?.title) return matchPlural.properties.title;
+
+        // 4. Word match with minimum length of 4 characters to avoid single letter matches
+        const wordMatch = sheetList.find((s: any) => {
             const title = (s.properties?.title || '').toLowerCase().trim();
             const pref = preferredSheetName.toLowerCase().trim();
-            return title.includes(pref) || pref.includes(title);
+            return (title.length >= 4 && pref.includes(title)) || (pref.length >= 4 && title.includes(pref));
         });
-        if (partial && partial.properties?.title) return partial.properties.title;
+        if (wordMatch && wordMatch.properties?.title) return wordMatch.properties.title;
 
-        // 4. Fallback to first sheet tab in the spreadsheet
-        if (sheetList.length > 0 && sheetList[0].properties?.title) {
-            console.warn(`[Sheets API] Aba '${preferredSheetName}' não encontrada na planilha ${spreadsheetId}. Usando a aba '${sheetList[0].properties.title}'.`);
-            return sheetList[0].properties.title;
-        }
     } catch (e) {
         console.error(`[Sheets API Warning] Falha ao verificar abas da planilha:`, e);
     }
@@ -676,20 +680,7 @@ export async function getAppointments(spreadsheetId: string, sheetName: string):
         const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
         let range = `${targetSheetName}!${AGENDAMENTO_SHEETS_RANGE}`;
         
-        let response;
-        try {
-            response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-        } catch (err: any) {
-            console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada para Agendamentos em ${spreadsheetId}. Tentando primeira aba...`);
-            const meta = await sheets.spreadsheets.get({ spreadsheetId });
-            const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
-            if (firstSheetTitle) {
-                range = `${firstSheetTitle}!${AGENDAMENTO_SHEETS_RANGE}`;
-                response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-            } else {
-                throw err;
-            }
-        }
+        const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
         
         const rows = response.data.values;
         if (!rows || rows.length <= 1) return [];
