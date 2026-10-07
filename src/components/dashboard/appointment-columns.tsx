@@ -8,8 +8,49 @@ import type { Appointment } from "@/lib/types"
 import { DataTableRowActions } from "./data-table-row-actions"
 import { Badge } from "../ui/badge"
 import { cn, normalizeText } from "@/lib/utils"
-import { format } from "date-fns"
+import { isToday, isBefore, isAfter, addDays, startOfDay } from "date-fns"
 import { getStoredWhatsAppTemplate, buildWhatsAppMessage } from "./whatsapp-template-dialog"
+
+export function getAppointmentDateCategory(examDateStr?: string, notified?: boolean) {
+  if (!examDateStr) return { isToday: false, isPast: false, isUrgentNotified: false, displayDate: '—' };
+  
+  let dateObj: Date | null = null;
+  let displayDate = examDateStr;
+
+  if (examDateStr.includes('-')) {
+    const [y, m, d] = examDateStr.split('-').map(Number);
+    if (y && m && d) {
+      dateObj = new Date(y, m - 1, d);
+      displayDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+    }
+  } else if (examDateStr.includes('/')) {
+    const [d, m, y] = examDateStr.split('/').map(Number);
+    if (d && m && y) {
+      dateObj = new Date(y, m - 1, d);
+    }
+  }
+
+  if (!dateObj || isNaN(dateObj.getTime())) {
+    return { isToday: false, isPast: false, isUrgentNotified: false, displayDate };
+  }
+
+  const todayStart = startOfDay(new Date());
+  const examDayStart = startOfDay(dateObj);
+  const threeDaysFromNow = addDays(todayStart, 3);
+
+  const isExamToday = examDayStart.getTime() === todayStart.getTime();
+  const isPast = examDayStart < todayStart;
+  const isUpcoming = examDayStart >= todayStart && examDayStart <= threeDaysFromNow;
+
+  const isUrgentNotified = (isExamToday || isUpcoming) && !notified;
+
+  return {
+    isToday: isExamToday,
+    isPast,
+    isUrgentNotified,
+    displayDate,
+  };
+}
 
 export const getColumns = (
   onEdit: (appointment: Appointment) => void,
@@ -74,20 +115,35 @@ export const getColumns = (
       )
     },
     cell: ({ row }) => {
-      const dateStr = row.original.examDate;
-      if (!dateStr) return <span className="text-muted-foreground text-xs">—</span>;
-      try {
-        let displayDate = dateStr;
-        if (dateStr.includes('-')) {
-          const [y, m, d] = dateStr.split('-');
-          if (y && m && d) displayDate = `${d}/${m}/${y}`;
-        }
-        return <span className="font-semibold text-primary">{displayDate}</span>;
-      } catch (e) {
-        return <span className="font-semibold">{dateStr}</span>;
-      }
+      const app = row.original;
+      const { isToday: examIsToday, isPast, isUrgentNotified, displayDate } = getAppointmentDateCategory(app.examDate, app.notified);
+
+      return (
+        <div className="flex flex-col gap-1">
+          <span className={cn(
+            "font-semibold",
+            examIsToday ? "text-cyan-600 dark:text-cyan-400 font-bold" : isPast ? "text-muted-foreground text-xs" : "text-primary"
+          )}>
+            {displayDate}
+          </span>
+          {isUrgentNotified ? (
+            <Badge className="px-1.5 py-0.5 text-[10px] bg-rose-500 text-white font-bold animate-pulse w-fit border-0 shadow-sm">
+              🚨 AVISAR URGENTE
+            </Badge>
+          ) : examIsToday ? (
+            <Badge className="px-1.5 py-0.5 text-[10px] bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold w-fit border-cyan-500/30">
+              📅 EXAME HOJE
+            </Badge>
+          ) : isPast ? (
+            <Badge variant="outline" className="px-1.5 py-0.5 text-[9px] text-muted-foreground/70 border-dashed w-fit">
+              Arquivado
+            </Badge>
+          ) : null}
+        </div>
+      );
     },
   },
+
   {
     accessorKey: "phone",
     header: "Telefone / WhatsApp",

@@ -7,11 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AppointmentForm, type AppointmentFormValues } from "./appointment-form";
 import { getAppointments, addAppointment, updateAppointment, deleteAppointment } from "@/lib/google-api";
 import { toast } from "@/hooks/use-toast";
-import { getColumns } from "./appointment-columns";
+import { getColumns, getAppointmentDateCategory } from "./appointment-columns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, BellRing, CheckCircle2, XCircle, Users, Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, BellRing, CheckCircle2, XCircle, Users, Settings, Archive, AlertTriangle } from "lucide-react";
 import WhatsAppTemplateDialog from "./whatsapp-template-dialog";
+import { cn } from "@/lib/utils";
 
 interface AppointmentTableProps {
   sheetId: string;
@@ -24,6 +26,7 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | null>(null);
+  const [viewMode, setViewMode] = React.useState<'proximos' | 'urgentes' | 'arquivados' | 'todos'>('proximos');
   const formRef = React.useRef<{ resetForm: () => void }>(null);
 
   const fetchAppointments = React.useCallback(async () => {
@@ -128,7 +131,7 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
     setEditingAppointment(null);
     setIsFormOpen(true);
   };
-  
+
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = React.useState(false);
 
   const handleCloseDialog = () => {
@@ -140,16 +143,38 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
 
   const columns = getColumns(openFormForEdit, handleDelete, handleToggleNotified);
 
-  // Stats calculation
+  // Advanced Stats calculation
   const totalCount = appointments.length;
-  const pendingNotificationCount = appointments.filter(a => !a.notified).length;
-  const willAttendCount = appointments.filter(a => a.status === 'vai').length;
-  const wontAttendCount = appointments.filter(a => a.status === 'nao_vai').length;
+
+  const processedData = React.useMemo(() => {
+    return appointments.map((app) => ({
+      app,
+      dateInfo: getAppointmentDateCategory(app.examDate, app.notified),
+    }));
+  }, [appointments]);
+
+  const todayCount = processedData.filter((d) => d.dateInfo.isToday).length;
+  const urgentNotifiedCount = processedData.filter((d) => d.dateInfo.isUrgentNotified).length;
+  const activeUpcomingCount = processedData.filter((d) => !d.dateInfo.isPast).length;
+  const archivedPastCount = processedData.filter((d) => d.dateInfo.isPast).length;
+  const confirmedFutureCount = processedData.filter((d) => d.app.status === 'vai' && !d.dateInfo.isPast).length;
+
+  // Filtered dataset for DataTable based on viewMode
+  const filteredAppointments = React.useMemo(() => {
+    return processedData
+      .filter(({ dateInfo }) => {
+        if (viewMode === 'proximos') return !dateInfo.isPast;
+        if (viewMode === 'urgentes') return dateInfo.isUrgentNotified;
+        if (viewMode === 'arquivados') return dateInfo.isPast;
+        return true; // 'todos'
+      })
+      .map(({ app }) => app);
+  }, [processedData, viewMode]);
 
   return (
     <div className="space-y-6">
       {/* Top Action Bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-foreground">Gestão de Agendamentos</h2>
           <p className="text-xs text-muted-foreground">Cadastre exames agendados, envie mensagens dinâmicas no WhatsApp e controle presenças.</p>
@@ -158,7 +183,7 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
           variant="outline"
           size="sm"
           onClick={() => setIsTemplateDialogOpen(true)}
-          className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 font-semibold shadow-sm gap-2"
+          className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 font-semibold shadow-sm gap-2 self-start sm:self-auto"
         >
           <Settings className="h-4 w-4" />
           <span>Configurar Mensagem WhatsApp</span>
@@ -167,41 +192,41 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
 
       {/* KPI / Summary Cards ("cards brilhantes") */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total Agendamentos */}
-        <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-md shadow-lg shadow-black/5 hover:border-primary/40 transition-all duration-300">
-          <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-2xl" />
+        {/* Exames Hoje */}
+        <Card className="relative overflow-hidden border-cyan-500/30 bg-cyan-500/10 backdrop-blur-md shadow-lg shadow-cyan-500/5 hover:border-cyan-500/50 transition-all duration-300">
+          <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-cyan-500/20 blur-2xl" />
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Agendados</p>
-              <h3 className="text-2xl font-bold tracking-tight text-foreground mt-1">{totalCount}</h3>
+              <p className="text-xs font-semibold text-cyan-800 dark:text-cyan-300 uppercase tracking-wider">Exames Hoje</p>
+              <h3 className="text-2xl font-bold tracking-tight text-cyan-900 dark:text-cyan-200 mt-1">{todayCount}</h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 shadow-sm">
               <Calendar className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Pendentes de Aviso */}
-        <Card className="relative overflow-hidden border-amber-500/20 bg-amber-500/5 backdrop-blur-md shadow-lg shadow-amber-500/5 hover:border-amber-500/40 transition-all duration-300">
-          <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-amber-500/20 blur-2xl" />
+        {/* Alertas Urgentes Sem Aviso */}
+        <Card className="relative overflow-hidden border-rose-500/30 bg-rose-500/10 backdrop-blur-md shadow-lg shadow-rose-500/10 hover:border-rose-500/50 transition-all duration-300">
+          <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-rose-500/20 blur-2xl" />
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Avisos Pendentes</p>
-              <h3 className="text-2xl font-bold tracking-tight text-amber-800 dark:text-amber-300 mt-1">{pendingNotificationCount}</h3>
+              <p className="text-xs font-semibold text-rose-800 dark:text-rose-300 uppercase tracking-wider">Avisar Urgente</p>
+              <h3 className="text-2xl font-bold tracking-tight text-rose-900 dark:text-rose-200 mt-1">{urgentNotifiedCount}</h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shadow-sm">
-              <BellRing className="h-6 w-6 animate-pulse" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 shadow-sm">
+              <AlertTriangle className="h-6 w-6 animate-pulse" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Vai Fazer (Confirmado) */}
+        {/* Confirmados (Futuros) */}
         <Card className="relative overflow-hidden border-emerald-500/30 bg-emerald-500/10 backdrop-blur-md shadow-lg shadow-emerald-500/10 hover:border-emerald-500/50 transition-all duration-300">
           <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-emerald-500/20 blur-2xl" />
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Confirmados (Vai)</p>
-              <h3 className="text-2xl font-bold tracking-tight text-emerald-900 dark:text-emerald-200 mt-1">{willAttendCount}</h3>
+              <h3 className="text-2xl font-bold tracking-tight text-emerald-900 dark:text-emerald-200 mt-1">{confirmedFutureCount}</h3>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 shadow-sm">
               <CheckCircle2 className="h-6 w-6" />
@@ -209,25 +234,82 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
           </CardContent>
         </Card>
 
-        {/* Não Vai Fazer (Cancelados) */}
-        <Card className="relative overflow-hidden border-rose-500/20 bg-rose-500/5 backdrop-blur-md shadow-lg shadow-rose-500/5 hover:border-rose-500/40 transition-all duration-300">
-          <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-rose-500/20 blur-2xl" />
+        {/* Arquivados (Passados) */}
+        <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-md shadow-lg shadow-black/5 hover:border-primary/40 transition-all duration-300">
+          <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-2xl" />
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider">Não Irão Fazer</p>
-              <h3 className="text-2xl font-bold tracking-tight text-rose-800 dark:text-rose-300 mt-1">{wontAttendCount}</h3>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Histórico Arquivado</p>
+              <h3 className="text-2xl font-bold tracking-tight text-foreground mt-1">{archivedPastCount}</h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 shadow-sm">
-              <XCircle className="h-6 w-6" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/30 text-muted-foreground shadow-sm">
+              <Archive className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* View Mode Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b pb-3">
+        <Button
+          variant={viewMode === 'proximos' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setViewMode('proximos')}
+          className="gap-2 font-semibold text-xs"
+        >
+          <Calendar className="h-4 w-4" />
+          <span>Próximos (Ativos)</span>
+          <Badge variant={viewMode === 'proximos' ? 'secondary' : 'outline'} className="ml-1 text-[10px] px-1.5 py-0">
+            {activeUpcomingCount}
+          </Badge>
+        </Button>
+
+        <Button
+          variant={viewMode === 'urgentes' ? 'destructive' : 'ghost'}
+          size="sm"
+          onClick={() => setViewMode('urgentes')}
+          className={cn(
+            "gap-2 font-semibold text-xs",
+            viewMode === 'urgentes' ? "" : "text-rose-600 dark:text-rose-400 hover:bg-rose-500/10"
+          )}
+        >
+          <AlertTriangle className="h-4 w-4 animate-pulse" />
+          <span>🚨 Urgentes sem Aviso</span>
+          <Badge className="ml-1 text-[10px] px-1.5 py-0 bg-rose-600 text-white font-bold">
+            {urgentNotifiedCount}
+          </Badge>
+        </Button>
+
+        <Button
+          variant={viewMode === 'arquivados' ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => setViewMode('arquivados')}
+          className="gap-2 font-semibold text-xs text-muted-foreground"
+        >
+          <Archive className="h-4 w-4" />
+          <span>Arquivados (Passados)</span>
+          <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0">
+            {archivedPastCount}
+          </Badge>
+        </Button>
+
+        <Button
+          variant={viewMode === 'todos' ? 'outline' : 'ghost'}
+          size="sm"
+          onClick={() => setViewMode('todos')}
+          className="gap-2 font-semibold text-xs"
+        >
+          <span>Todos os Registros</span>
+          <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0">
+            {totalCount}
+          </Badge>
+        </Button>
+      </div>
+
       {/* Main Data Table */}
       <DataTable 
         columns={columns} 
-        data={appointments} 
+        data={filteredAppointments} 
         onAddPatient={openFormForAdd}
       />
 
