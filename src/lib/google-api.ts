@@ -257,7 +257,8 @@ async function deleteRow(spreadsheetId: string, id: string, sheetName: string, i
     throw new Error("O ID é necessário para excluir.");
   }
   const sheets = await getSheetsApi();
-  const range = `${sheetName}!${idColumnRange}`;
+  const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+  const range = `${targetSheetName}!${idColumnRange}`;
   const rowNumber = await findRowById(sheets, spreadsheetId, id, range);
 
   if (!rowNumber) {
@@ -271,11 +272,11 @@ async function deleteRow(spreadsheetId: string, id: string, sheetName: string, i
     });
 
     // Find the sheet ID for the specific sheetName
-    const sheet = sheetIdResponse.data.sheets?.find(s => s.properties?.title === sheetName);
+    const sheet = sheetIdResponse.data.sheets?.find(s => s.properties?.title === targetSheetName);
     const sheetNumId = sheet?.properties?.sheetId;
 
     if (sheetNumId === null || sheetNumId === undefined) {
-      throw new Error(`Não foi possível encontrar o ID da aba da planilha com o nome '${sheetName}'.`);
+      throw new Error(`Não foi possível encontrar o ID da aba da planilha com o nome '${targetSheetName}'.`);
     }
 
     await sheets.spreadsheets.batchUpdate({
