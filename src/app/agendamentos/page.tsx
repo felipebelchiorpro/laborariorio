@@ -6,11 +6,11 @@ import DashboardLayout from '@/components/dashboard/dashboard-layout';
 
 const AGENDAMENTO_SHEET_ID = 
   process.env.NEXT_PUBLIC_AGENDAMENTO_SHEET_ID || 
-  process.env.NEXT_PUBLIC_FOSP_SHEET_ID || 
+  process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID || 
   process.env.NEXT_PUBLIC_SAO_LUCAS_SHEET_ID || 
   process.env.NEXT_PUBLIC_SAO_JOAO_SHEET_ID || 
-  process.env.NEXT_PUBLIC_RECOLETA_SHEET_ID || 
-  '152u0-Rphsn3q7DFnWTIsOKpvi8n7BEzosSuHQC0uOSA';
+  process.env.NEXT_PUBLIC_FOSP_SHEET_ID || 
+  '1OsCAoFjrmZtgKE8FpPjsEhvfpUdV9Sm_fK2T6qZS2Mw';
 
 function AgendamentosPage() {
   if (!AGENDAMENTO_SHEET_ID) {

@@ -213,7 +213,15 @@ async function resolveSheetName(sheets: any, spreadsheetId: string, preferredShe
         const ci = sheetList.find((s: any) => s.properties?.title?.toLowerCase() === preferredSheetName.toLowerCase());
         if (ci && ci.properties?.title) return ci.properties.title;
 
-        // 3. Fallback to first sheet tab in the spreadsheet
+        // 3. Singular / Plural or substring match (e.g. "Agendamento" vs "Agendamentos")
+        const partial = sheetList.find((s: any) => {
+            const title = (s.properties?.title || '').toLowerCase().trim();
+            const pref = preferredSheetName.toLowerCase().trim();
+            return title.includes(pref) || pref.includes(title);
+        });
+        if (partial && partial.properties?.title) return partial.properties.title;
+
+        // 4. Fallback to first sheet tab in the spreadsheet
         if (sheetList.length > 0 && sheetList[0].properties?.title) {
             console.warn(`[Sheets API] Aba '${preferredSheetName}' não encontrada na planilha ${spreadsheetId}. Usando a aba '${sheetList[0].properties.title}'.`);
             return sheetList[0].properties.title;
