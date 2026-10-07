@@ -34,3 +34,16 @@ export type Fosp = {
   examType: string;
   observations?: string;
 };
+
+export type AppointmentStatus = 'pendente' | 'vai' | 'nao_vai';
+
+export type Appointment = {
+  id: string;
+  rowNumber: number;
+  patientName: string;
+  examDate: string; // ISO string ou YYYY-MM-DD
+  phone: string;
+  notified: boolean;
+  status: AppointmentStatus;
+  observations?: string;
+};

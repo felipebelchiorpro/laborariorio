@@ -26,6 +26,7 @@ import {
   Microscope,
   FileText,
   Send,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -89,6 +90,14 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       tooltip: 'Gestão de FOSP',
     },
     {
+      title: 'Agendamentos',
+      href: '/agendamentos',
+      icon: MessageSquare,
+      color: 'text-green-500',
+      activeColor: 'bg-green-500/10 text-green-500',
+      tooltip: 'Agendamentos & WhatsApp',
+    },
+    {
       title: 'Relatórios',
       href: '/relatorios',
       icon: ClipboardList,
@@ -105,6 +114,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       tooltip: 'Consultar Resultados',
     },
   ];
+
 
   return (
     <SidebarProvider>

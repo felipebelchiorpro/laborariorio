@@ -1,6 +1,6 @@
 'use server';
 import { google } from 'googleapis';
-import type { Exam, PdfLink, Recoleta, Fosp } from './types';
+import type { Exam, PdfLink, Recoleta, Fosp, Appointment, AppointmentStatus } from './types';
 import { parse, isValid, format } from 'date-fns';
 import { randomUUID } from 'crypto';
 import { uploadPdfToCloudinary } from './cloudinary';
@@ -17,6 +17,10 @@ const EXAM_ID_COLUMN_INDEX = 0;
 // Colunas Recoleta: ID, Paciente, UBS, Cor do Tubo, Avisado, OBS
 const RECOLETA_SHEETS_RANGE = 'A:F';
 const RECOLETA_ID_COLUMN_INDEX = 0;
+
+// Colunas Agendamento: ID, Paciente, Data do Exame, Telefone, Avisado, Status, OBS
+const AGENDAMENTO_SHEETS_RANGE = 'A:G';
+const AGENDAMENTO_ID_COLUMN_INDEX = 0;
 
 
 async function getAuthClient() {
@@ -583,5 +587,161 @@ export async function deleteFosp(spreadsheetId: string, sheetName: string, id: s
     }
 }
 
+// --- Funções de Agendamento & WhatsApp ---
+
+function mapRowToAppointment(row: any[], index: number): Appointment | null {
+    const rowNumber = index + 2;
+    const [id, patientName, examDateStr, phone, notifiedStr, statusStr, observations] = row;
+
+    if (!patientName || String(patientName).trim() === '') {
+        return null;
+    }
+
+    let examDate: string = '';
+    if (examDateStr) {
+        try {
+            const dateString = String(examDateStr).trim();
+            if (dateString) {
+                if (dateString.includes('-') && dateString.length === 10) {
+                    examDate = dateString;
+                } else {
+                    let parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
+                    if (isValid(parsedDate)) {
+                        examDate = format(parsedDate, 'yyyy-MM-dd');
+                    }
+                }
+            }
+        } catch (e) {
+            // fail silently
+        }
+    }
+
+    let status: AppointmentStatus = 'pendente';
+    const rawStatus = String(statusStr || '').toUpperCase().trim();
+    if (rawStatus === 'VAI' || rawStatus === 'CONFIRMADO') {
+        status = 'vai';
+    } else if (rawStatus === 'NAO_VAI' || rawStatus === 'NÃO VAI' || rawStatus === 'CANCELADO') {
+        status = 'nao_vai';
+    }
+
+    return {
+        id: String(id || `MISSING_ID_ROW_${rowNumber}`),
+        rowNumber,
+        patientName: String(patientName || ''),
+        examDate: examDate || '',
+        phone: String(phone || ''),
+        notified: String(notifiedStr).toUpperCase() === 'SIM',
+        status,
+        observations: observations || '',
+    };
+}
+
+function mapAppointmentToRow(app: Partial<Omit<Appointment, 'rowNumber'>>): any[] {
+    let displayDate = app.examDate || '';
+    if (app.examDate && app.examDate.includes('-')) {
+        try {
+            const [y, m, d] = app.examDate.split('-');
+            if (y && m && d) displayDate = `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+        } catch (e) {}
+    }
+
+    let statusStr = 'PENDENTE';
+    if (app.status === 'vai') statusStr = 'VAI';
+    if (app.status === 'nao_vai') statusStr = 'NAO_VAI';
+
+    return [
+        app.id || '',
+        app.patientName || '',
+        displayDate,
+        app.phone || '',
+        app.notified ? 'SIM' : 'NÃO',
+        statusStr,
+        app.observations || '',
+    ];
+}
+
+export async function getAppointments(spreadsheetId: string, sheetName: string): Promise<Appointment[]> {
+    noStore();
+    if (!spreadsheetId) return [];
+    try {
+        const sheets = await getSheetsApi();
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+        let range = `${targetSheetName}!${AGENDAMENTO_SHEETS_RANGE}`;
+        
+        let response;
+        try {
+            response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+        } catch (err: any) {
+            console.warn(`[Sheets API Warning] Aba '${sheetName}' não encontrada para Agendamentos em ${spreadsheetId}. Tentando primeira aba...`);
+            const meta = await sheets.spreadsheets.get({ spreadsheetId });
+            const firstSheetTitle = meta.data.sheets?.[0]?.properties?.title;
+            if (firstSheetTitle) {
+                range = `${firstSheetTitle}!${AGENDAMENTO_SHEETS_RANGE}`;
+                response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+            } else {
+                throw err;
+            }
+        }
+        
+        const rows = response.data.values;
+        if (!rows || rows.length <= 1) return [];
+
+        return rows.slice(1)
+            .map((row: any[], index: number) => mapRowToAppointment(row, index + 1))
+            .filter((app: Appointment | null): app is Appointment => app !== null && app.patientName.trim() !== '');
+    } catch (error) {
+        console.error(`[Sheets API Error] Falha ao buscar agendamentos:`, error);
+        throw new Error('Failed to fetch appointments data from Google Sheets.');
+    }
+}
+
+export async function addAppointment(spreadsheetId: string, sheetName: string, appointment: Omit<Appointment, 'id' | 'rowNumber'>) {
+    try {
+        const sheets = await getSheetsApi();
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+        const newId = randomUUID();
+        const values = [mapAppointmentToRow({ ...appointment, id: newId })];
+        const range = `${targetSheetName}!${AGENDAMENTO_SHEETS_RANGE}`;
+        await sheets.spreadsheets.values.append({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao adicionar agendamento:`, error);
+        return { error: error.message || 'Failed to add appointment data to Google Sheets.' };
+    }
+}
+
+export async function updateAppointment(spreadsheetId: string, sheetName: string, appointment: Appointment) {
+    if (!appointment.id) return { error: "O ID é necessário para atualizar." };
+    try {
+        const sheets = await getSheetsApi();
+        const targetSheetName = await resolveSheetName(sheets, spreadsheetId, sheetName);
+        const rowNumber = await findRowById(sheets, spreadsheetId, appointment.id, `${targetSheetName}!A:A`);
+
+        if (!rowNumber) {
+            console.warn(`Agendamento com ID ${appointment.id} não encontrado. Adicionando como novo.`);
+            return await addAppointment(spreadsheetId, targetSheetName, appointment);
+        }
+
+        const range = `${targetSheetName}!A${rowNumber}:G${rowNumber}`;
+        const values = [mapAppointmentToRow(appointment)];
+        await sheets.spreadsheets.values.update({ spreadsheetId, range, valueInputOption: 'USER_ENTERED', requestBody: { values } });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao atualizar agendamento:`, error);
+        return { error: error.message || 'Failed to update appointment in Google Sheets.' };
+    }
+}
+
+export async function deleteAppointment(spreadsheetId: string, sheetName: string, id: string) {
+    try {
+        await deleteRow(spreadsheetId, id, sheetName, 'A:A');
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Sheets API Error] Falha ao excluir agendamento:`, error);
+        return { error: error.message || 'Failed to delete appointment from Google Sheets.' };
+    }
+}
+
 // Re-export the new upload function for convenience
 export { uploadPdfToCloudinary };
+
