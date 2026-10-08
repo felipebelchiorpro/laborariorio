@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Agendamentos Posto de Saúde</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="popup-body">
+  <div class="popup-container">
+
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="popup-header-icon">🏥</div>
+      <div>
+        <h1 class="popup-title">Sincronização WhatsApp</h1>
+        <p class="popup-subtitle">Posto de Saúde - Agendamento de Exames</p>
+      </div>
+    </div>
+
+    <!-- Toggle Card (Safe by Default: Inativo) -->
+    <div class="toggle-card">
+      <div class="toggle-label-container">
+        <span class="toggle-title">Modo Automação</span>
+        <span id="statusBadge" class="status-badge inactive">Estação Inativa</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="automationToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- Configuracao Web App URL -->
+    <div class="field-group">
+      <label class="field-label" for="webAppUrl">URL do Google Apps Script Web App</label>
+      <input type="url" id="webAppUrl" class="input-text" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+
+    <!-- Botao de Sincronizacao -->
+    <button id="syncBtn" class="btn-primary" disabled>
+      <span>⚡ Sincronizar Respostas Agora</span>
+    </button>
+
+    <!-- Feedback e Historico de Logs -->
+    <div class="field-group">
+      <label class="field-label">Resumo da Última Sincronização</label>
+      <div id="feedbackBox" class="feedback-box">
+        <div class="feedback-log">Estação pronta. Ative o modo automação e clique em sincronizar no WhatsApp Web.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
