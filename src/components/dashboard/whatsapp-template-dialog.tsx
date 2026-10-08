@@ -16,7 +16,7 @@ import { Settings, RotateCcw, Check, Sparkles, MessageSquare } from "lucide-reac
 
 export const DEFAULT_WHATSAPP_TEMPLATE = `Olá *{paciente}*, tudo bem? Aqui é do *Laboratório Municipal de Caconde*.
 
-Lembramos do seu exame agendado para o dia *{data}*.
+Lembramos do seu exame agendado para *{dia_da_semana}*, dia *{data}*.
 
 Por favor, confirme se você irá comparecer ou se precisa remarcar.`;
 
@@ -31,6 +31,31 @@ export function saveStoredWhatsAppTemplate(template: string) {
   }
 }
 
+export function getDayOfWeekName(examDateStr: string): string {
+  if (!examDateStr) return '';
+  let dateObj: Date | null = null;
+  if (examDateStr.includes('-')) {
+    const [y, m, d] = examDateStr.split('-').map(Number);
+    if (y && m && d) dateObj = new Date(y, m - 1, d);
+  } else if (examDateStr.includes('/')) {
+    const [d, m, y] = examDateStr.split('/').map(Number);
+    if (d && m && y) dateObj = new Date(y, m - 1, d);
+  }
+
+  if (!dateObj || isNaN(dateObj.getTime())) return '';
+
+  const days = [
+    'domingo',
+    'segunda-feira',
+    'terça-feira',
+    'quarta-feira',
+    'quinta-feira',
+    'sexta-feira',
+    'sábado'
+  ];
+  return days[dateObj.getDay()];
+}
+
 export function buildWhatsAppMessage(template: string, patientName: string, examDate: string): string {
   let displayDate = examDate || '';
   if (examDate && examDate.includes('-')) {
@@ -38,9 +63,12 @@ export function buildWhatsAppMessage(template: string, patientName: string, exam
     if (y && m && d) displayDate = `${d}/${m}/${y}`;
   }
 
+  const dayOfWeek = getDayOfWeekName(examDate);
+
   return template
     .replace(/\{paciente\}/gi, patientName)
     .replace(/\{data\}/gi, displayDate || 'indicado')
+    .replace(/\{dia_da_semana\}|\{diasemana\}|\{dia\}/gi, dayOfWeek || '')
     .replace(/\{laboratorio\}/gi, 'Laboratório Municipal de Caconde');
 }
 
@@ -119,6 +147,13 @@ export default function WhatsAppTemplateDialog({ open, onOpenChange }: WhatsAppT
                 className="cursor-pointer bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20 text-xs py-1"
               >
                 + &#123;data&#125;
+              </Badge>
+              <Badge
+                variant="outline"
+                onClick={() => insertVariable("{dia_da_semana}")}
+                className="cursor-pointer bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20 text-xs py-1"
+              >
+                + &#123;dia_da_semana&#125;
               </Badge>
               <Badge
                 variant="outline"
