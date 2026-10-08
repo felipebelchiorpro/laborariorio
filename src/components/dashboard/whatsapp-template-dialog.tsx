@@ -45,13 +45,13 @@ export function getDayOfWeekName(examDateStr: string): string {
   if (!dateObj || isNaN(dateObj.getTime())) return '';
 
   const days = [
-    'domingo',
-    'segunda-feira',
-    'terça-feira',
-    'quarta-feira',
-    'quinta-feira',
-    'sexta-feira',
-    'sábado'
+    'DOMINGO',
+    'SEGUNDA-FEIRA',
+    'TERÇA-FEIRA',
+    'QUARTA-FEIRA',
+    'QUINTA-FEIRA',
+    'SEXTA-FEIRA',
+    'SÁBADO'
   ];
   return days[dateObj.getDay()];
 }
