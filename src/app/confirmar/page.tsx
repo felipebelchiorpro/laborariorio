@@ -104,19 +104,21 @@ function ConfirmarContent() {
         <Card className="bg-slate-900/90 border border-slate-800 shadow-2xl rounded-3xl overflow-hidden backdrop-blur-md">
           {/* Header com Logo da Prefeitura */}
           <div className="bg-slate-950/80 p-6 flex flex-col items-center justify-center border-b border-slate-800/80 text-center relative">
-            <div className="relative w-28 h-28 mb-2 drop-shadow-md">
-              <Image
-                src="/logoprefeitura.png"
-                alt="Prefeitura da Estância Climática de Caconde"
-                fill
-                className="object-contain"
-                priority
-              />
+            <div className="relative w-28 h-28 p-2 bg-white rounded-2xl shadow-md mb-2 flex items-center justify-center">
+              <div className="relative w-full h-full">
+                <Image
+                  src="/logoprefeitura.png"
+                  alt="Brasão de Caconde"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
             </div>
-            <h1 className="text-base font-bold tracking-tight text-white uppercase mt-1">
+            <h1 className="text-base font-bold tracking-tight text-white uppercase mt-2">
               Prefeitura de Caconde
             </h1>
-            <p className="text-xs text-emerald-400 font-semibold tracking-wider uppercase flex items-center gap-1 mt-0.5">
+            <p className="text-xs text-emerald-400 font-semibold tracking-wider uppercase flex items-center justify-center gap-1 mt-1">
               <Building2 className="w-3.5 h-3.5" />
               Laboratório Municipal de Caconde
             </p>
@@ -180,8 +182,8 @@ function ConfirmarContent() {
                   <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 text-center space-y-2">
                     <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
                     <h3 className="text-sm font-bold text-emerald-300 uppercase">Presença Confirmada!</h3>
-                    <p className="text-xs text-emerald-200/80 leading-relaxed">
-                      Sua vaga está garantida. Lembre-se de comparecer em jejum com seu documento oficial com foto e pedido médico.
+                    <p className="text-xs text-emerald-200/90 leading-relaxed">
+                      Sua presença foi confirmada com sucesso! Sua vaga está garantida. Aguardamos você!
                     </p>
                     <div className="pt-2">
                       <Button
@@ -247,14 +249,17 @@ function ConfirmarContent() {
           </CardContent>
         </Card>
 
-        {/* Rodapé de Segurança e LGPD */}
+        {/* Rodapé de Segurança e Créditos */}
         <div className="mt-4 text-center space-y-1">
           <p className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             Canal Oficial Seguro • Laboratório Municipal de Caconde
           </p>
-          <p className="text-[9px] text-slate-400">
+          <p className="text-[9px] text-slate-500">
             Prefeitura Municipal da Estância Climática de Caconde - SP
+          </p>
+          <p className="text-[9px] text-slate-400/80 pt-1 font-medium">
+            Desenvolvido por <strong className="text-slate-300">Krona Orbit</strong>
           </p>
         </div>
 
