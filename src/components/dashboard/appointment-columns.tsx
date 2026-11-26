@@ -157,8 +157,9 @@ export const getColumns = (
         const formattedPhone = digitsOnly.length <= 11 ? `55${digitsOnly}` : digitsOnly;
         const customTemplate = getStoredWhatsAppTemplate();
         const rawMsg = buildWhatsAppMessage(customTemplate, app.patientName, app.examDate, app.id);
+        // Garantir que a codificação UTF-8 preserve perfeitamente emojis e caracteres especiais no wa.me
         const textMessage = encodeURIComponent(rawMsg);
-        window.open(`https://wa.me/${formattedPhone}?text=${textMessage}`, '_blank');
+        window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${textMessage}`, '_blank');
       };
 
 
