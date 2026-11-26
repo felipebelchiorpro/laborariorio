@@ -229,7 +229,7 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Confirmados (Vai)</p>
-              <h3 className="text-2xl font-bold tracking-tight text-emerald-900 dark:text-emerald-200 mt-1">{confirmedFutureCount}</h3>
+              <h3 className="text-2xl font-bold tracking-tight text-emerald-900 dark:text-emerald-200 mt-1">{confirmedCount}</h3>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 shadow-sm">
               <CheckCircle2 className="h-6 w-6" />
