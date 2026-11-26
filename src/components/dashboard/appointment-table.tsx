@@ -29,26 +29,60 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
   const [viewMode, setViewMode] = React.useState<'proximos' | 'confirmados' | 'nao_vai' | 'urgentes' | 'arquivados' | 'todos'>('proximos');
   const formRef = React.useRef<{ resetForm: () => void }>(null);
 
-  const fetchAppointments = React.useCallback(async () => {
+  const previousAppointmentsRef = React.useRef<Appointment[]>([]);
+
+  const fetchAppointments = React.useCallback(async (isPolling = false) => {
     if (!sheetId) return;
-    setLoading(true);
+    if (!isPolling) setLoading(true);
     try {
       const data = await getAppointments(sheetId, sheetName);
+
+      // Detectar se algum paciente acabou de marcar que NÃO VAI (ou confirmou) enquanto a atendente estava com o painel aberto
+      if (previousAppointmentsRef.current.length > 0) {
+        data.forEach((novo) => {
+          const antigo = previousAppointmentsRef.current.find((a) => a.id === novo.id);
+          if (antigo && antigo.status !== novo.status) {
+            if (novo.status === 'nao_vai') {
+              toast({
+                title: "⚠️ Vaga Liberada!",
+                description: `O paciente ${novo.patientName} acabou de informar que NÃO PODERÁ ir no dia do exame.`,
+                variant: "destructive",
+              });
+            } else if (novo.status === 'vai') {
+              toast({
+                title: "✅ Presença Confirmada!",
+                description: `O paciente ${novo.patientName} confirmou presença pelo link!`,
+              });
+            }
+          }
+        });
+      }
+
+      previousAppointmentsRef.current = data;
       setAppointments(data);
     } catch (error) {
-      console.error("Failed to fetch appointments:", error);
-      toast({
-        title: "Erro ao buscar agendamentos",
-        description: "Não foi possível carregar os dados da planilha. Verifique as configurações.",
-        variant: "destructive"
-      });
+      if (!isPolling) {
+        console.error("Failed to fetch appointments:", error);
+        toast({
+          title: "Erro ao buscar agendamentos",
+          description: "Não foi possível carregar os dados da planilha. Verifique as configurações.",
+          variant: "destructive"
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!isPolling) setLoading(false);
     }
   }, [sheetId, sheetName]);
 
   React.useEffect(() => {
     fetchAppointments();
+
+    // Auto-atualização periódica a cada 25 segundos (100% gratuito e nativo)
+    const interval = setInterval(() => {
+      fetchAppointments(true);
+    }, 25000);
+
+    return () => clearInterval(interval);
   }, [fetchAppointments]);
 
   const handleAddOrUpdate = async (values: AppointmentFormValues) => {
