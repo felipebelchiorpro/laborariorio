@@ -179,40 +179,42 @@ function ConfirmarContent() {
 
                 {/* Bloco de Confirmação ou Feedback */}
                 {feedbackStatus === "vai" ? (
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 text-center space-y-2">
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 text-center space-y-3">
                     <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
                     <h3 className="text-sm font-bold text-emerald-300 uppercase">Presença Confirmada!</h3>
                     <p className="text-xs text-emerald-200/90 leading-relaxed">
                       Sua presença foi confirmada com sucesso! Sua vaga está garantida. Aguardamos você!
                     </p>
-                    <div className="pt-2">
+                    <div className="pt-2 border-t border-emerald-500/20">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleAction("desistir")}
                         disabled={submitting}
-                        className="text-[11px] text-slate-400 hover:text-rose-400 underline h-auto p-0"
+                        className="w-full text-xs border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition-colors py-2 h-auto"
                       >
-                        Precisa cancelar ou remarcar? Clique aqui
+                        <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                        Teve um imprevisto? Clique aqui para informar que NÃO PODERÁ ir
                       </Button>
                     </div>
                   </div>
                 ) : feedbackStatus === "nao_vai" ? (
-                  <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-center space-y-2">
+                  <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-center space-y-3">
                     <XCircle className="w-10 h-10 text-rose-400 mx-auto" />
                     <h3 className="text-sm font-bold text-rose-300 uppercase">Vaga Liberada / Cancelada</h3>
                     <p className="text-xs text-rose-200/80 leading-relaxed">
-                      Registramos que você não poderá comparecer. A vaga foi liberada para outro paciente da fila.
+                      Registramos que você não poderá comparecer. Seu status foi atualizado no sistema e a vaga foi liberada para outro paciente da fila.
                     </p>
-                    <div className="pt-2">
+                    <div className="pt-2 border-t border-rose-500/20">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleAction("confirmar")}
                         disabled={submitting}
-                        className="text-[11px] text-slate-400 hover:text-emerald-400 underline h-auto p-0"
+                        className="w-full text-xs border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 transition-colors py-2 h-auto"
                       >
-                        Enganou-se? Clique aqui para confirmar presença
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                        Mudou de ideia? Clique aqui para confirmar presença
                       </Button>
                     </div>
                   </div>
