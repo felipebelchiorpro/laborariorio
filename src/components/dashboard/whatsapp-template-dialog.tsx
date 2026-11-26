@@ -198,7 +198,11 @@ export default function WhatsAppTemplateDialog({ open, onOpenChange }: WhatsAppT
     setTemplate((prev) => `${prev} ${variableStr}`);
   };
 
-  const samplePreview = buildWhatsAppMessage(template, "ALINE RAQUEL PEPE", "2026-11-24", "demo-id");
+  const [samplePreview, setSamplePreview] = useState<string>("");
+
+  useEffect(() => {
+    setSamplePreview(buildWhatsAppMessage(template, "ALINE RAQUEL PEPE", "2026-11-24", "demo-id"));
+  }, [template, schedule]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
