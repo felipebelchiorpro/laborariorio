@@ -26,7 +26,7 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingAppointment, setEditingAppointment] = React.useState<Appointment | null>(null);
-  const [viewMode, setViewMode] = React.useState<'proximos' | 'urgentes' | 'arquivados' | 'todos'>('proximos');
+  const [viewMode, setViewMode] = React.useState<'proximos' | 'confirmados' | 'nao_vai' | 'urgentes' | 'arquivados' | 'todos'>('proximos');
   const formRef = React.useRef<{ resetForm: () => void }>(null);
 
   const fetchAppointments = React.useCallback(async () => {
@@ -157,13 +157,16 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
   const urgentNotifiedCount = processedData.filter((d) => d.dateInfo.isUrgentNotified).length;
   const activeUpcomingCount = processedData.filter((d) => !d.dateInfo.isPast).length;
   const archivedPastCount = processedData.filter((d) => d.dateInfo.isPast).length;
-  const confirmedFutureCount = processedData.filter((d) => d.app.status === 'vai' && !d.dateInfo.isPast).length;
+  const confirmedCount = processedData.filter((d) => d.app.status === 'vai' && !d.dateInfo.isPast).length;
+  const naoVaiCount = processedData.filter((d) => d.app.status === 'nao_vai' && !d.dateInfo.isPast).length;
 
   // Filtered dataset for DataTable based on viewMode
   const filteredAppointments = React.useMemo(() => {
     return processedData
-      .filter(({ dateInfo }) => {
+      .filter(({ app, dateInfo }) => {
         if (viewMode === 'proximos') return !dateInfo.isPast;
+        if (viewMode === 'confirmados') return app.status === 'vai' && !dateInfo.isPast;
+        if (viewMode === 'nao_vai') return app.status === 'nao_vai' && !dateInfo.isPast;
         if (viewMode === 'urgentes') return dateInfo.isUrgentNotified;
         if (viewMode === 'arquivados') return dateInfo.isPast;
         return true; // 'todos'
@@ -261,6 +264,38 @@ export default function AppointmentTable({ sheetId, sheetName = "Agendamentos" }
           <span>Próximos (Ativos)</span>
           <Badge variant={viewMode === 'proximos' ? 'secondary' : 'outline'} className="ml-1 text-[10px] px-1.5 py-0">
             {activeUpcomingCount}
+          </Badge>
+        </Button>
+
+        <Button
+          variant={viewMode === 'confirmados' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setViewMode('confirmados')}
+          className={cn(
+            "gap-2 font-semibold text-xs",
+            viewMode === 'confirmados' ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+          )}
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Confirmados (Vai)</span>
+          <Badge className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-600 text-white font-bold">
+            {confirmedCount}
+          </Badge>
+        </Button>
+
+        <Button
+          variant={viewMode === 'nao_vai' ? 'destructive' : 'ghost'}
+          size="sm"
+          onClick={() => setViewMode('nao_vai')}
+          className={cn(
+            "gap-2 font-semibold text-xs",
+            viewMode === 'nao_vai' ? "" : "text-rose-600 dark:text-rose-400 hover:bg-rose-500/10"
+          )}
+        >
+          <XCircle className="h-4 w-4" />
+          <span>Desistências / Não Vai</span>
+          <Badge className="ml-1 text-[10px] px-1.5 py-0 bg-rose-600 text-white font-bold">
+            {naoVaiCount}
           </Badge>
         </Button>
 

@@ -156,7 +156,7 @@ export const getColumns = (
         if (!digitsOnly) return;
         const formattedPhone = digitsOnly.length <= 11 ? `55${digitsOnly}` : digitsOnly;
         const customTemplate = getStoredWhatsAppTemplate();
-        const rawMsg = buildWhatsAppMessage(customTemplate, app.patientName, app.examDate);
+        const rawMsg = buildWhatsAppMessage(customTemplate, app.patientName, app.examDate, app.id);
         const textMessage = encodeURIComponent(rawMsg);
         window.open(`https://wa.me/${formattedPhone}?text=${textMessage}`, '_blank');
       };
