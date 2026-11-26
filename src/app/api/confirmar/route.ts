@@ -65,6 +65,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Regra estrita: Se o paciente já cancelou/desistiu, a vaga foi liberada e não é permitido reconfirmar pelo link
+    if (appointment.status === "nao_vai") {
+      return NextResponse.json(
+        { error: "Este agendamento já foi cancelado e a vaga foi liberada. Entre em contato diretamente com o laboratório para novo agendamento." },
+        { status: 400 }
+      );
+    }
+
     const newStatus = action === "confirmar" ? "vai" : "nao_vai";
     const updated = {
       ...appointment,

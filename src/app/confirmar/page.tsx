@@ -202,21 +202,12 @@ function ConfirmarContent() {
                   <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-5 text-center space-y-3">
                     <XCircle className="w-10 h-10 text-rose-400 mx-auto" />
                     <h3 className="text-sm font-bold text-rose-300 uppercase">Vaga Liberada / Cancelada</h3>
-                    <p className="text-xs text-rose-200/80 leading-relaxed">
-                      Registramos que você não poderá comparecer. Seu status foi atualizado no sistema e a vaga foi liberada para outro paciente da fila.
+                    <p className="text-xs text-rose-200/90 leading-relaxed">
+                      Você informou que não poderá comparecer. Seu cancelamento foi registrado com sucesso e a vaga foi liberada para outro paciente da fila.
                     </p>
-                    <div className="pt-2 border-t border-rose-500/20">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAction("confirmar")}
-                        disabled={submitting}
-                        className="w-full text-xs border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 transition-colors py-2 h-auto"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                        Mudou de ideia? Clique aqui para confirmar presença
-                      </Button>
-                    </div>
+                    <p className="text-[11px] text-slate-400 pt-1">
+                      Caso precise realizar o exame futuramente, por favor procure o laboratório para um novo agendamento.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
